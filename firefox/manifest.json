@@ -1,0 +1,31 @@
+{
+  "manifest_version": 2,
+  "name": "Domain Extension (Firefox)",
+  "version": "1.0",
+  "description": "Firefox variant for local/fake domain routing via proxy.onRequest.",
+  "permissions": [
+    "proxy",
+    "storage",
+    "tabs",
+    "<all_urls>",
+    "browsingData",
+    "http://127.0.0.1:9080/*"
+  ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_title": "Domain Mode (Firefox)",
+    "default_popup": "popup.html"
+  },
+  "applications": {
+    "gecko": {
+      "id": "domain-extension-firefox@local"
+    }
+  }
+}
+

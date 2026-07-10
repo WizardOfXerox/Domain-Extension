@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Local TLS Certificates & CA
+server/certs/
+*.pem
+*.crt
+*.key
+rootCA.pem
+rootCA-key.pem
+
+# Local Override State & Client Rules
+server/override_state.json
+server/client_overrides.json
+server/domains.txt
+
+# Local Hijacked Websites / Custom Project Folders
+server/websites/*
+!server/websites/.gitkeep
+
+# Package Managers & Dependencies
+node_modules/
+jspm_packages/
+.npm/
+.yarn/
+yarn-error.log
+.pnp/
+.pnp.js
+
+# Environments & Private Configs
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.sync.json
+
+# IDEs & System Files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+get-pip.py
+scratch/

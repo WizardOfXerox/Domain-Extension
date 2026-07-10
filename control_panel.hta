@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta charset="utf-8" />
+    <title>Domain Extension Control Center</title>
+    <hta:application 
+        id="oApp" 
+        applicationname="DomainExtensionControlCenter" 
+        border="thin" 
+        borderstyle="normal" 
+        caption="yes" 
+        maximizebutton="yes" 
+        minimizebutton="yes" 
+        showintaskbar="yes" 
+        singleinstance="yes" 
+        sysmenu="yes" 
+        version="3.0" 
+        windowstate="normal"
+    />
+    <style>
+        :root {
+            --bg: #030712;
+            --card: #0b0f19;
+            --card-alt: #0f1623;
+            --border: #1f2937;
+            --border-light: #374151;
+            --text: #f9fafb;
+            --muted: #9ca3af;
+            --dim: #6b7280;
+            --primary: #10b981;
+            --primary-glow: rgba(16, 185, 129, 0.15);
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --danger: #ef4444;
+            --warn: #f59e0b;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: #030712;
+            color: #f9fafb;
+            font-family: "Segoe UI", -apple-system, sans-serif;
+            font-size: 13px;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+        }
+
+        /* ── Header ── */
+        .header {
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 52px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #1f2937;
+            background: #0b0f19;
+        }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .title { font-size: 18px; font-weight: 700; color: #10b981; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid #1f2937;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #9ca3af;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .status-dot.online {
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+        .lan-badge {
+            font-size: 11px;
+            color: #6366f1;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        /* ── Tabs ── */
+        .tab-bar {
+            position: absolute;
+            top: 52px; left: 0; right: 0; height: 42px;
+            display: flex;
+            border-bottom: 1px solid #1f2937;
+            background: #0b0f19;
+            padding: 0 20px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #9ca3af;
+            border: none;
+            border-bottom: 2px solid transparent;
+            background: none;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .tab-btn:hover { color: #f9fafb; }
+        .tab-btn.active {
+            color: #10b981;
+            border-bottom-color: #10b981;
+        }
+        .tab-content {
+            display: none;
+            position: absolute;
+            top: 94px; left: 0; right: 0; bottom: 32px;
+            padding: 16px 20px;
+            overflow: hidden;
+        }
+        .tab-content.active { display: block; }
+
+        /* ── Cards ── */
+        .card {
+            background: #0b0f19;
+            border: 1px solid #1f2937;
+            border-radius: 10px;
+            padding: 14px;
+        }
+        .card h2 {
+            font-size: 11px;
+            margin: 0 0 10px 0;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        /* ── Buttons ── */
+        button {
+            background: #1f2937;
+            border: 1px solid #374151;
+            color: #f9fafb;
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        button:hover { background: #374151; border-color: #4b5563; }
+        button.btn-primary { background: #10b981; border-color: #10b981; color: #000; }
+        button.btn-primary:hover { background: #34d399; border-color: #34d399; }
+        button.btn-danger { background: #ef4444; border-color: #ef4444; }
+        button.btn-danger:hover { background: #f87171; border-color: #f87171; }
+        .btn-sm { padding: 4px 10px; font-size: 11px; }
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        /* ── Forms ── */
+        .form-row { margin-bottom: 10px; display: flex; flex-direction: column; gap: 3px; }
+        .form-row label { font-size: 11px; color: #9ca3af; font-weight: 600; }
+        input, select, textarea {
+            background: #030712;
+            border: 1px solid #1f2937;
+            color: #f9fafb;
+            padding: 7px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        /* ── Dashboard Layout ── */
+        .dash-top {
+            position: absolute;
+            top: 16px; left: 20px; right: 20px; height: 80px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+        .stat-card {
+            background: #0b0f19;
+            border: 1px solid #1f2937;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            height: 100%;
+        }
+        .stat-value { font-size: 26px; font-weight: 800; color: #10b981; margin: 2px 0; }
+        .stat-label { font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .dash-bottom {
+            position: absolute;
+            top: 108px; left: 20px; right: 20px; bottom: 112px;
+        }
+        .dash-left-col {
+            position: absolute;
+            top: 0; left: 0; bottom: 0; width: 300px;
+        }
+        .dash-right-col {
+            position: absolute;
+            top: 0; left: 314px; right: 0; bottom: 0;
+            overflow-y: auto;
+        }
+        .dash-console {
+            position: absolute;
+            left: 20px; right: 20px; bottom: 12px; height: 88px;
+        }
+
+        .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .bar-label { width: 160px; font-size: 11px; color: #d1d5db; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .bar-track { flex: 1; height: 18px; background: #1f2937; border-radius: 4px; overflow: hidden; position: relative; }
+        .bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; min-width: 2px; }
+        .bar-count { width: 50px; text-align: right; font-size: 11px; color: #9ca3af; font-weight: 600; }
+        .status-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .status-box { text-align: center; padding: 8px 4px; border-radius: 6px; border: 1px solid #1f2937; background: #0f1623; }
+        .status-box .val { font-size: 18px; font-weight: 700; }
+        .status-box .lbl { font-size: 9px; color: #9ca3af; }
+
+        /* Active Services Matrix styling */
+        .service-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0f1623;
+            border: 1px solid #1f2937;
+            padding: 7px 10px;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            font-size: 11px;
+        }
+        .service-row span { font-weight: 600; color: #d1d5db; }
+        .indicator-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #ef4444;
+            display: inline-block;
+            box-shadow: 0 0 6px #ef4444;
+        }
+        .indicator-dot.online {
+            background: #10b981;
+            box-shadow: 0 0 6px #10b981;
+        }
+
+        /* ── Websites Layout ── */
+        .websites-sidebar {
+            position: absolute;
+            top: 16px; left: 20px; bottom: 16px; width: 320px;
+        }
+        .websites-main {
+            position: absolute;
+            top: 16px; left: 354px; right: 20px; bottom: 16px;
+            overflow-y: auto;
+        }
+        .domains-list { height: 260px; overflow-y: auto; border: 1px solid #1f2937; background: #030712; border-radius: 8px; padding: 4px; }
+        .domain-item {
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin-bottom: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .domain-item:hover { background: rgba(255,255,255,0.04); }
+        .domain-item.selected { background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); }
+
+        /* ── Logs ── */
+        .log-toolbar {
+            position: absolute;
+            top: 16px; left: 20px; right: 20px; height: 32px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .log-container {
+            position: absolute;
+            top: 56px; left: 20px; right: 20px; bottom: 16px;
+            overflow-y: auto;
+            border: 1px solid #1f2937;
+            border-radius: 8px;
+            background: #030712;
+        }
+        .log-entry {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 12px;
+            border-bottom: 1px solid rgba(31,41,55,0.5);
+            font-family: "Consolas", "Courier New", monospace;
+            font-size: 11px;
+        }
+        .log-entry:hover { background: rgba(255,255,255,0.02); }
+        .log-ts { color: #6b7280; width: 72px; flex-shrink: 0; }
+        .log-domain { color: #7dd3fc; width: 220px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .log-mode { width: 50px; flex-shrink: 0; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .log-mode.local { color: #10b981; }
+        .log-mode.proxy { color: #f59e0b; }
+        .log-latency { color: #9ca3af; width: 70px; text-align: right; flex-shrink: 0; }
+        .badge {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            width: 36px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .badge-2xx { background: rgba(16,185,129,0.15); color: #34d399; }
+        .badge-3xx { background: rgba(59,130,246,0.15); color: #60a5fa; }
+        .badge-4xx { background: rgba(245,158,11,0.15); color: #fbbf24; }
+        .badge-5xx { background: rgba(239,68,68,0.15); color: #f87171; }
+
+        /* ── Console ── */
+        .console {
+            background: #030712;
+            border: 1px solid #1f2937;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-family: "Consolas", monospace;
+            font-size: 11px;
+            height: 100%;
+            overflow-y: auto;
+            color: #a5b4fc;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            position: absolute;
+            bottom: 0; left: 0; right: 0; height: 32px;
+            border-top: 1px solid #1f2937;
+            background: #0b0f19;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 10px;
+            color: #6b7280;
+        }
+
+        /* ── Tethered & GitHub Layouts ── */
+        .tethered-container, .github-container {
+            position: absolute;
+            top: 16px; left: 20px; right: 20px; bottom: 16px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .subtitle { font-size: 12px; color: #9ca3af; margin-bottom: 14px; }
+        .table-container { border: 1px solid #1f2937; border-radius: 8px; overflow: hidden; background: #030712; margin-top: 12px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
+        th, td { padding: 10px 12px; border-bottom: 1px solid #1f2937; }
+        th { background: #0f1623; font-weight: 600; color: #9ca3af; font-size: 11px; text-transform: uppercase; }
+        tr:last-child td { border-bottom: none; }
+        .pill { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <!-- ══ Header ══ -->
+    <div class="header">
+        <div class="header-left">
+            <div class="title">Domain Extension</div>
+            <div class="btn-group">
+                <button class="btn-primary btn-sm" onclick="runCommand('start')">Start</button>
+                <button class="btn-danger btn-sm" onclick="runCommand('stop')">Stop</button>
+                <button class="btn-sm" onclick="runCommand('certs')">Regen Certs</button>
+            </div>
+        </div>
+        <div class="header-right">
+            <span id="lanBadge" class="lan-badge" style="display:none;">LAN: --</span>
+            <div class="status-pill">
+                <span id="statusDot" class="status-dot"></span>
+                <span id="statusText">Checking...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Tab Bar ══ -->
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+        <button class="tab-btn" onclick="switchTab('websites')">Websites</button>
+        <button class="tab-btn" onclick="switchTab('tethered')">Tethered Devices</button>
+        <button class="tab-btn" onclick="switchTab('github')">GitHub Repos</button>
+        <button class="tab-btn" onclick="switchTab('logs')">Logs</button>
+    </div>
+
+    <!-- ══════════ TAB: Dashboard ══════════ -->
+    <div id="tab-dashboard" class="tab-content active">
+        <!-- Stats Row -->
+        <div class="dash-top">
+            <div class="stat-card">
+                <div class="stat-label">Total Requests</div>
+                <div class="stat-value" id="metricTotal">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Latency</div>
+                <div class="stat-value" id="metricLatency" style="color:#6366f1;">0<span style="font-size:12px;">ms</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Uptime</div>
+                <div class="stat-value" id="metricUptime" style="color:#f59e0b;">0<span style="font-size:12px;">s</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Websites</div>
+                <div class="stat-value" id="metricSites" style="color:#f472b6;">0</div>
+            </div>
+        </div>
+
+        <!-- Lower Grid -->
+        <div class="dash-bottom">
+            <!-- Left Grid Status -->
+            <div class="card dash-left-col" style="height: 100%;">
+                <h2>Status Codes</h2>
+                <div id="statusCodesPanel" class="status-grid">
+                    <div class="status-box"><div class="val" style="color:#34d399;" id="sc2xx">0</div><div class="lbl">2xx</div></div>
+                    <div class="status-box"><div class="val" style="color:#60a5fa;" id="sc3xx">0</div><div class="lbl">3xx</div></div>
+                    <div class="status-box"><div class="val" style="color:#fbbf24;" id="sc4xx">0</div><div class="lbl">4xx</div></div>
+                    <div class="status-box"><div class="val" style="color:#f87171;" id="sc5xx">0</div><div class="lbl">5xx</div></div>
+                    <div class="status-box"><div class="val" style="color:#9ca3af;" id="scOther">0</div><div class="lbl">other</div></div>
+                </div>
+                <h2 style="margin-top:14px;">Mode Split</h2>
+                <div style="display:flex; gap:8px;">
+                    <div class="status-box" style="flex:1;"><div class="val" style="color:#10b981;" id="modeLocal">0</div><div class="lbl">Local</div></div>
+                    <div class="status-box" style="flex:1;"><div class="val" style="color:#f59e0b;" id="modeProxy">0</div><div class="lbl">Proxy</div></div>
+                </div>
+                
+                <!-- Services Matrix -->
+                <h2 style="margin-top:14px;">Active Services</h2>
+                <div id="servicesMatrix">
+                    <div class="service-row"><span>DNS Server (UDP 53)</span><span id="svcDns" class="indicator-dot"></span></div>
+                    <div class="service-row"><span>HTTPS Host (TCP 443)</span><span id="svcHttps" class="indicator-dot"></span></div>
+                    <div class="service-row"><span>CONNECT Proxy (TCP 9081)</span><span id="svcConnect" class="indicator-dot"></span></div>
+                    <div class="service-row"><span>Control API (TCP 9080)</span><span id="svcControl" class="indicator-dot"></span></div>
+                </div>
+            </div>
+
+            <!-- Top Domains Bar Chart -->
+            <div class="card dash-right-col" style="height: 100%;">
+                <h2>Top Domains <button class="btn-sm" style="float:right; margin-top:-4px;" onclick="resetMetrics()">Reset Stats</button></h2>
+                <div id="topDomainsChart" style="margin-top: 10px;">
+                    <div style="color:#6b7280; padding:20px; text-align:center;">Waiting for data...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Console -->
+        <div class="card dash-console">
+            <div class="console" id="consoleLog">Ready.</div>
+        </div>
+    </div>
+
+    <!-- ══════════ TAB: Websites ══════════ -->
+    <div id="tab-websites" class="tab-content">
+        <!-- Sidebar Controls -->
+        <div class="websites-sidebar">
+            <div class="card" style="margin-bottom:12px;">
+                <h2>Create Website</h2>
+                <div class="form-row">
+                    <label>Domain Name</label>
+                    <input type="text" id="newDomainName" placeholder="e.g. app.fake" />
+                </div>
+                <div class="form-row">
+                    <label>Profile Template</label>
+                    <select id="newDomainPack">
+                        <option value="vite-react">Vite + React</option>
+                        <option value="nextjs">NextJS</option>
+                        <option value="node-express">Express (Node)</option>
+                        <option value="php-xampp">PHP (XAMPP)</option>
+                        <option value="wordpress-xampp">WordPress (XAMPP)</option>
+                        <option value="laravel">Laravel</option>
+                    </select>
+                </div>
+                <button class="btn-primary" style="margin-top:4px; width:100%;" onclick="createWebsite()">Create Website</button>
+            </div>
+
+            <!-- Domain List -->
+            <div class="card" style="height: calc(100% - 190px);">
+                <h2>Websites</h2>
+                <div class="domains-list" id="domainsList" style="height: calc(100% - 24px);">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Config Editor -->
+        <div class="websites-main">
+            <div class="card" style="min-height:100%;">
+                <h2 id="editorTitle">Select a Website to Edit</h2>
+                <div id="editorForm" style="display:none;">
+                    <div class="grid-2">
+                        <div class="form-row">
+                            <label>Routing Mode (Phone & PC)</label>
+                            <select id="cfgMode">
+                                <option value="local">Local (Serve local files)</option>
+                                <option value="proxy">Original (Go to live production site)</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label>Entry File</label>
+                            <input type="text" id="cfgEntry" />
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-row">
+                            <label>Simulated Latency (ms)</label>
+                            <input type="number" id="cfgLatency" min="0" />
+                        </div>
+                        <div class="form-row">
+                            <label>Backend Origin URL (optional)</label>
+                            <input type="text" id="cfgBackend" placeholder="http://127.0.0.1:3000" />
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-row">
+                            <label>Backend Profile</label>
+                            <input type="text" id="cfgBackendProfile" placeholder="e.g. nextjs" />
+                        </div>
+                        <div class="form-row">
+                            <!-- spacer -->
+                        </div>
+                    </div>
+
+                    <h3 style="font-size:11px; margin:14px 0 6px 0; color:#9ca3af; text-transform:uppercase; letter-spacing:0.5px;">Developer Watermark</h3>
+                    <div style="border:1px solid #1f2937; padding:10px; border-radius:8px; margin-bottom:14px;">
+                        <div class="grid-2">
+                            <div class="form-row">
+                                <label style="display:flex; align-items:center; gap:6px;">
+                                    <input type="checkbox" id="cfgWatermarkEnabled" style="margin:0;" /> Enabled
+                                </label>
+                            </div>
+                            <div class="form-row">
+                                <label>Watermark Text</label>
+                                <input type="text" id="cfgWatermarkText" />
+                            </div>
+                            <div class="form-row">
+                                <label>Banner Color (Hex)</label>
+                                <input type="text" id="cfgWatermarkColor" placeholder="#ef4444" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mock Routes with dropdown templates -->
+                    <h3 style="font-size:11px; margin:14px 0 6px 0; color:#9ca3af; text-transform:uppercase; letter-spacing:0.5px;">Mock Routes</h3>
+                    <div class="form-row" style="margin-bottom:14px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <label>Routes Configuration (JSON)</label>
+                            <select id="routeTemplateSelect" style="padding:2px 6px; font-size:10px; height:20px; background:#1f2937;" onchange="loadRouteTemplate()">
+                                <option value="">-- Load Route Template --</option>
+                                <option value="json_mock">JSON API Response</option>
+                                <option value="redirect_mock">URL Redirect</option>
+                                <option value="error_500">500 Server Error</option>
+                                <option value="delay_mock">Simulate Latency</option>
+                            </select>
+                        </div>
+                        <textarea id="cfgRoutes" style="height:90px; font-family:Consolas,monospace; font-size:11px;" placeholder='[{"path":"/api/*","action":"mock","body":{"ok":true}}]'></textarea>
+                    </div>
+
+                    <div style="display:flex; gap:10px; justify-content:flex-end;">
+                        <button class="btn-danger" onclick="deleteWebsite()">Delete Website</button>
+                        <button class="btn-primary" onclick="saveConfig()">Save Config</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ TAB: Logs ══════════ -->
+    <div id="tab-logs" class="tab-content">
+        <div class="log-toolbar">
+            <span style="font-size:11px; color:#9ca3af; font-weight:600;">LIVE REQUEST LOG</span>
+            <span id="logCount" style="font-size:11px; color:#6b7280; margin-left:auto;">0 entries</span>
+            <button class="btn-sm" onclick="clearLogs()">Clear</button>
+            <button class="btn-sm" onclick="toggleAutoscroll()"><span id="autoscrollLabel">Autoscroll: ON</span></button>
+        </div>
+        <div class="log-container" id="logContainer">
+            <div style="color:#6b7280; padding:20px; text-align:center; font-size:12px;">Waiting for requests... Logs appear here when the server is running.</div>
+        </div>
+    </div>
+
+    <!-- ══════════ TAB: Tethered Devices ══════════ -->
+    <div id="tab-tethered" class="tab-content">
+        <div class="tethered-container">
+            <!-- Left Info Panel -->
+            <div class="card" style="display:flex; flex-direction:column; gap:12px;">
+                <h2>Mobile Device Configuration Guide</h2>
+                <div class="subtitle" style="line-height:1.6;">
+                    Connect your mobile phone/tablet to the same Wi-Fi network as this PC, then follow these configurations:
+                </div>
+                <div style="background:rgba(99,102,241,0.06); border:1px solid rgba(99,102,241,0.15); padding:14px; border-radius:8px; line-height:1.6;">
+                    <strong>1. Set System DNS:</strong><br/>
+                    Go to Wi-Fi Settings → Advanced → <strong>DNS Server</strong>.<br/>
+                    Set DNS IP to this PC: <strong style="color:#fbbf24;" id="tether-lan-ip">checking...</strong>
+                </div>
+                <div style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.15); padding:14px; border-radius:8px; line-height:1.6;">
+                    <strong>2. Trust local HTTPS pages:</strong><br/>
+                    Open this URL on your phone browser to download CA cert:<br/>
+                    <a href="#" id="tether-ca-link" target="_blank" style="color:#10b981; font-weight:700;">checking...</a>
+                </div>
+                <div style="background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.15); padding:14px; border-radius:8px; line-height:1.6;">
+                    <strong>3. Bypassing HTTPS/HSTS Warnings:</strong><br/>
+                    If a site like Google blocks you, configure a <strong>proxy</strong> override below, or toggle it via this HTTP page on your phone:<br/>
+                    <a href="#" id="tether-portal-link" target="_blank" style="color:#f59e0b; font-weight:700;">checking...</a>
+                </div>
+            </div>
+
+            <!-- Right Override Panel -->
+            <div class="card" style="display:flex; flex-direction:column; gap:12px;">
+                <h2>Device Specific Routing Overrides</h2>
+                <div class="grid-2">
+                    <div class="form-row">
+                        <label>Device IP Address</label>
+                        <input type="text" id="clientIpInput" placeholder="e.g. 192.168.254.107" />
+                    </div>
+                    <div class="form-row">
+                        <label>Intercepted Domain</label>
+                        <input type="text" id="clientDomainInput" placeholder="e.g. www.google.com" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>Device Routing Mode</label>
+                    <select id="clientModeSelect" style="width:100%;">
+                        <option value="proxy">Proxy (Bypass to Live Website)</option>
+                        <option value="local">Local (Serve Local Directory files)</option>
+                    </select>
+                </div>
+                <button class="btn-primary" onclick="addClientOverride()" style="width:100%;">Add Override Rule</button>
+
+                <div class="table-container" style="flex:1; overflow-y:auto; min-height:150px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Device IP</th>
+                                <th>Domain</th>
+                                <th>Target Mode</th>
+                                <th style="width: 80px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientOverridesBody">
+                            <tr>
+                                <td colspan="4" style="text-align:center; color:#6b7280; padding:20px;">No overrides configured.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ TAB: GitHub Repos ══════════ -->
+    <div id="tab-github" class="tab-content">
+        <div class="github-container">
+            <!-- Left Config Panel -->
+            <div class="card" style="display:flex; flex-direction:column; gap:12px;">
+                <h2>Link Git Repository to Local Domain</h2>
+                <div class="form-row">
+                    <label>Map Domain</label>
+                    <input type="text" id="ghDomain" placeholder="myapp.fake" />
+                </div>
+                <div class="form-row">
+                    <label>GitHub Repository HTTPS Clone URL</label>
+                    <input type="text" id="ghRepo" placeholder="https://github.com/owner/repo.git" style="width:100%;" />
+                </div>
+                <div class="form-row">
+                    <label>Branch</label>
+                    <input type="text" id="ghBranch" value="main" />
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <button class="btn-primary" onclick="ghAdd()" style="flex:1;">Add Repo Source</button>
+                    <label style="display:flex; align-items:center; gap:6px; font-size:11px; cursor:pointer;">
+                        <input type="checkbox" id="ghKeepFiles" /> Keep Files on Remove
+                    </label>
+                </div>
+
+                <h2 style="margin-top:12px;">Sync Commands</h2>
+                <div class="btn-group">
+                    <button onclick="ghList()">List Mapped Repos</button>
+                    <button onclick="ghStatus()">Sync Status Check</button>
+                    <button onclick="ghPull()">Pull Domain Files</button>
+                    <button onclick="ghPullAll()">Pull All Repos</button>
+                    <button class="btn-danger" onclick="ghRemove()">Remove Mapped Repo</button>
+                </div>
+            </div>
+
+            <!-- Right Output Diagnostic Panel -->
+            <div class="card" style="display:flex; flex-direction:column; gap:12px;">
+                <h2>Diagnostic Console Output</h2>
+                <pre id="ghOut" style="flex:1; background:#030712; border:1px solid #1f2937; border-radius:8px; padding:12px; font-family:Consolas,monospace; font-size:11px; color:#a5b4fc; overflow-y:auto; margin:0; min-height:180px;">(no Github action outputs)</pre>
+                
+                <h2>Active Servers Diagnostic Probes</h2>
+                <div class="btn-group">
+                    <button onclick="loadMetrics()">Fetch Overall Metrics</button>
+                    <button onclick="loadHealth()">Check Site Health Logs</button>
+                    <input type="text" id="healthDomains" placeholder="Domain CSV (optional)" style="min-width:140px; font-size:11px; padding:4px 8px;" />
+                </div>
+                <pre id="healthOut" style="height:100px; background:#030712; border:1px solid #1f2937; border-radius:8px; padding:10px; font-family:Consolas,monospace; font-size:11px; color:#a5b4fc; overflow-y:auto; margin:0;">(no site health reports)</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Footer ══ -->
+    <div class="footer">
+        <span>Domain Extension v3.0</span>
+        <span id="footerInfo">Control Plane: http://127.0.0.1:9080</span>
+    </div>
+
+    <script>
+        var shell = null;
+        var fso = null;
+        var selectedDomain = "";
+        var logEntries = [];
+        var maxLogEntries = 500;
+        var autoscroll = true;
+        var siteCount = 0;
+        var htaFolder = "";
+
+        // Detect absolute HTA path dynamically for robust file reading
+        try {
+            var scriptPath = window.location.pathname;
+            if (scriptPath.charAt(0) === "/") {
+                scriptPath = scriptPath.substr(1);
+            }
+            scriptPath = decodeURIComponent(scriptPath);
+            htaFolder = scriptPath.substring(0, scriptPath.lastIndexOf("/"));
+            htaFolder = htaFolder.replace(/\//g, "\\");
+        } catch (e) {
+            // Ignore path detection errors in non-HTA runs
+        }
+
+        try {
+            shell = new ActiveXObject("WScript.Shell");
+            fso = new ActiveXObject("Scripting.FileSystemObject");
+        } catch (e) {
+            // Running outside HTA context
+        }
+
+        window.resizeTo(1200, 800);
+
+        // ── Utility ──
+        function logMsg(msg) {
+            var el = document.getElementById("consoleLog");
+            var d = new Date();
+            var ts = d.toTimeString().split(" ")[0];
+            el.innerHTML += "\n[" + ts + "] " + msg;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function fmtTime(sec) {
+            if (sec < 60) return sec + "s";
+            if (sec < 3600) return Math.floor(sec / 60) + "m";
+            if (sec < 86400) return Math.floor(sec / 3600) + "h " + Math.floor((sec % 3600) / 60) + "m";
+            return Math.floor(sec / 86400) + "d " + Math.floor((sec % 86400) / 3600) + "h";
+        }
+
+        function statusBadgeClass(status) {
+            if (status >= 200 && status < 300) return "badge-2xx";
+            if (status >= 300 && status < 400) return "badge-3xx";
+            if (status >= 400 && status < 500) return "badge-4xx";
+            if (status >= 500) return "badge-5xx";
+            return "";
+        }
+
+        // ── Tab Switching ──
+        function switchTab(name) {
+            var tabNames = ["dashboard", "websites", "tethered", "github", "logs"];
+            for (var i = 0; i < tabNames.length; i++) {
+                var tab = document.getElementById("tab-" + tabNames[i]);
+                if (tab) {
+                    tab.className = "tab-content" + (tabNames[i] === name ? " active" : "");
+                }
+            }
+
+            // Update tab button classes using getElementsByTagName for maximum compatibility
+            var btns = document.getElementsByTagName("button");
+            for (var j = 0; j < btns.length; j++) {
+                if (btns[j].className && btns[j].className.indexOf("tab-btn") !== -1) {
+                    var btnText = btns[j].innerText || btns[j].textContent || "";
+                    // Tab label might contain multiple words, e.g. "Tethered Devices"
+                    var tabLabel = btnText.replace(/^\s+|\s+$/g, "").toLowerCase();
+                    var match = false;
+                    if (name === "tethered" && tabLabel.indexOf("tethered") !== -1) match = true;
+                    else if (name === "github" && tabLabel.indexOf("github") !== -1) match = true;
+                    else if (tabLabel === name) match = true;
+
+                    if (match) {
+                        btns[j].className = "tab-btn active";
+                    } else {
+                        btns[j].className = "tab-btn";
+                    }
+                }
+            }
+
+            if (name === "tethered") {
+                loadLanIp();
+                loadClientOverrides();
+            }
+        }
+
+        // ── Active API Helpers ──
+        function apiCall(method, path, body, callback) {
+            var xhr = new XMLHttpRequest();
+            xhr.open(method, "http://127.0.0.1:9080" + path, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            var data = JSON.parse(xhr.responseText);
+                            if (callback) callback(null, data);
+                        } catch (e) {
+                            if (callback) callback(null, xhr.responseText);
+                        }
+                    } else {
+                        var errMsg = "Status " + xhr.status;
+                        try {
+                            var errData = JSON.parse(xhr.responseText);
+                            if (errData && errData.error) errMsg = errData.error;
+                        } catch(e) {}
+                        if (callback) callback(new Error(errMsg));
+                    }
+                }
+            };
+            try {
+                if (body) {
+                    xhr.send(JSON.stringify(body));
+                } else {
+                    xhr.send();
+                }
+            } catch (e) {
+                if (callback) callback(e);
+            }
+        }
+
+        // ── Tethered Devices logic ──
+        var serverLanIp = "127.0.0.1";
+        function loadLanIp() {
+            apiCall("GET", "/__xai/status?domain=www.google.com", null, function(err, res) {
+                if (err) return;
+                serverLanIp = res.lanIp || "127.0.0.1";
+                var tetherIp = document.getElementById("tether-lan-ip");
+                if (tetherIp) tetherIp.innerText = serverLanIp;
+
+                var caLink = document.getElementById("tether-ca-link");
+                if (caLink) {
+                    caLink.href = "http://" + serverLanIp + ":9080/__xai/ca";
+                    caLink.innerText = "http://" + serverLanIp + ":9080/__xai/ca";
+                }
+
+                var portalLink = document.getElementById("tether-portal-link");
+                if (portalLink) {
+                    portalLink.href = "http://" + serverLanIp + ":9080/__xai/portal?domain=www.google.com";
+                    portalLink.innerText = "http://" + serverLanIp + ":9080/__xai/portal";
+                }
+            });
+        }
+
+        function loadClientOverrides() {
+            apiCall("GET", "/__xai/client-overrides", null, function(err, data) {
+                var body = document.getElementById("clientOverridesBody");
+                if (!body) return;
+                body.innerHTML = "";
+                if (err) {
+                    body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#ef4444; padding:20px;">' + err.message + '</td></tr>';
+                    return;
+                }
+                var overrides = data.overrides || {};
+                var hasKeys = false;
+                for (var ip in overrides) {
+                    if (!overrides.hasOwnProperty(ip)) continue;
+                    var domains = overrides[ip] || {};
+                    for (var d in domains) {
+                        if (!domains.hasOwnProperty(d)) continue;
+                        hasKeys = true;
+                        var mode = domains[d];
+                        var tr = document.createElement("tr");
+                        tr.innerHTML = '<td style="font-family:monospace; color:#a5b4fc">' + ip + '</td>' +
+                                       '<td style="font-family:monospace; color:#fbbf24">' + d + '</td>' +
+                                       '<td><span class="pill" style="color:' + (mode === "proxy" ? "#10b981" : "#6366f1") + '; background:rgba(255,255,255,0.03);">' + mode + '</span></td>' +
+                                       '<td><button class="btn-danger btn-sm" onclick="removeClientOverride(\'' + ip + '\', \'' + d + '\')">Remove</button></td>';
+                        body.appendChild(tr);
+                    }
+                }
+                if (!hasKeys) {
+                    body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#6b7280; padding:20px;">No overrides configured.</td></tr>';
+                }
+            });
+        }
+
+        function addClientOverride() {
+            var ip = document.getElementById("clientIpInput").value;
+            var domain = document.getElementById("clientDomainInput").value;
+            var mode = document.getElementById("clientModeSelect").value;
+            if (!ip || !domain) {
+                alert("Device IP and Domain are required.");
+                return;
+            }
+            apiCall("POST", "/__xai/client-overrides", { clientIp: ip, domain: domain, mode: mode }, function(err) {
+                if (err) {
+                    alert("Error: " + err.message);
+                } else {
+                    document.getElementById("clientIpInput").value = "";
+                    document.getElementById("clientDomainInput").value = "";
+                    loadClientOverrides();
+                }
+            });
+        }
+
+        function removeClientOverride(ip, domain) {
+            apiCall("DELETE", "/__xai/client-overrides?clientIp=" + encodeURIComponent(ip) + "&domain=" + encodeURIComponent(domain), null, function(err) {
+                if (err) {
+                    alert("Error: " + err.message);
+                } else {
+                    loadClientOverrides();
+                }
+            });
+        }
+
+        // ── GitHub Repo Sync logic ──
+        function ghShow(text) {
+            document.getElementById("ghOut").innerText = text || "(none)";
+        }
+        function ghCall(path, body, callback) {
+            apiCall("POST", path, body, function(err, data) {
+                if (err) {
+                    ghShow(err.message);
+                } else {
+                    ghShow(data.output || "ok");
+                }
+                if (callback) callback(err, data);
+            });
+        }
+        function ghList() {
+            ghCall("/github/list", {});
+        }
+        function ghStatus() {
+            ghCall("/github/status", {});
+        }
+        function ghAdd() {
+            var domain = document.getElementById("ghDomain").value;
+            var repo = document.getElementById("ghRepo").value;
+            var branch = document.getElementById("ghBranch").value || "main";
+            if (!domain || !repo) {
+                alert("Domain and Repo URL are required.");
+                return;
+            }
+            ghCall("/github/add", { domain: domain, repoUrl: repo, branch: branch });
+        }
+        function ghPull() {
+            var domain = document.getElementById("ghDomain").value;
+            if (!domain) {
+                alert("Domain is required.");
+                return;
+            }
+            ghCall("/github/pull", { domain: domain });
+        }
+        function ghPullAll() {
+            ghCall("/github/pull-all", {});
+        }
+        function ghRemove() {
+            var domain = document.getElementById("ghDomain").value;
+            if (!domain) {
+                alert("Domain is required.");
+                return;
+            }
+            var keep = !!document.getElementById("ghKeepFiles").checked;
+            ghCall("/github/remove", { domain: domain, keepFiles: keep });
+        }
+
+        // ── Probes logic ──
+        function loadMetrics() {
+            apiCall("GET", "/__xai/metrics?top=15", null, function(err, data) {
+                var el = document.getElementById("ghOut");
+                if (err) {
+                    el.innerText = err.message;
+                } else {
+                    el.innerText = JSON.stringify(data, null, 2);
+                }
+            });
+        }
+        function loadHealth() {
+            var doms = document.getElementById("healthDomains").value;
+            var q = doms ? "?domains=" + encodeURIComponent(doms) : "";
+            apiCall("GET", "/__xai/health" + q, null, function(err, data) {
+                var el = document.getElementById("healthOut");
+                if (err) {
+                    el.innerText = err.message;
+                } else {
+                    el.innerText = JSON.stringify(data, null, 2);
+                }
+            });
+        }
+
+        // ── Server Commands ──
+        function runCommand(cmd) {
+            if (!shell) { logMsg("Shell not available (not running as HTA)"); return; }
+            logMsg("Running: python manage.py " + cmd);
+            try {
+                if (cmd === "start") {
+                    shell.Run("python manage.py start", 0, false);
+                    logMsg("Server start dispatched.");
+                } else if (cmd === "stop") {
+                    shell.Run("python manage.py stop", 0, true);
+                    logMsg("Server stopped.");
+                } else if (cmd === "certs") {
+                    shell.Run("python manage.py certs", 0, true);
+                    logMsg("Certificates regenerated.");
+                }
+            } catch (err) {
+                logMsg("Error: " + err.message);
+            }
+            setTimeout(checkStatus, 1500);
+        }
+
+        // ── Status Check ──
+        function checkStatus() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "http://127.0.0.1:9080/__xai/status?domain=test.fake", true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    var dot = document.getElementById("statusDot");
+                    var txt = document.getElementById("statusText");
+                    var lan = document.getElementById("lanBadge");
+                    
+                    var indicatorClass = (xhr.status === 200) ? "indicator-dot online" : "indicator-dot";
+                    document.getElementById("svcDns").className = indicatorClass;
+                    document.getElementById("svcHttps").className = indicatorClass;
+                    document.getElementById("svcConnect").className = indicatorClass;
+                    document.getElementById("svcControl").className = indicatorClass;
+
+                    if (xhr.status === 200) {
+                        dot.className = "status-dot online";
+                        txt.innerText = "ONLINE";
+                        try {
+                            var data = JSON.parse(xhr.responseText);
+                            if (data.lanIp) {
+                                lan.innerText = "LAN: " + data.lanIp;
+                                lan.style.display = "inline";
+                            }
+                        } catch(e) {}
+                    } else {
+                        dot.className = "status-dot";
+                        txt.innerText = "OFFLINE";
+                        if (lan) lan.style.display = "none";
+                    }
+                }
+            };
+            try { xhr.send(); } catch(e) {}
+        }
+
+        // ── Metrics Polling ──
+        function pollMetrics() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "http://127.0.0.1:9080/__xai/metrics?top=50", true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        updateDashboard(data);
+                    } catch(e) {}
+                }
+            };
+            try { xhr.send(); } catch(e) {}
+        }
+
+        function updateDashboard(data) {
+            document.getElementById("metricTotal").innerText = data.requestsTotal || 0;
+            document.getElementById("metricLatency").innerHTML = Math.round(data.avgLatencyMs || 0) + '<span style="font-size:12px;">ms</span>';
+            document.getElementById("metricUptime").innerHTML = fmtTime(data.uptimeSec || 0);
+            document.getElementById("metricSites").innerText = siteCount;
+
+            // Status codes
+            var sc = data.statusClass || {};
+            document.getElementById("sc2xx").innerText = sc["2xx"] || 0;
+            document.getElementById("sc3xx").innerText = sc["3xx"] || 0;
+            document.getElementById("sc4xx").innerText = sc["4xx"] || 0;
+            document.getElementById("sc5xx").innerText = sc["5xx"] || 0;
+            document.getElementById("scOther").innerText = sc["other"] || 0;
+
+            // Mode split
+            var bm = data.byMode || {};
+            document.getElementById("modeLocal").innerText = bm["local"] || 0;
+            document.getElementById("modeProxy").innerText = bm["proxy"] || 0;
+
+            // Top domains bar chart
+            var td = data.topDomains || [];
+            if (td.length > 0) {
+                var maxCount = td[0].count || 1;
+                var html = "";
+                var barColors = ["#10b981", "#6366f1", "#f59e0b", "#ec4899", "#8b5cf6", "#14b8a6", "#f43f5e", "#3b82f6"];
+                for (var i = 0; i < td.length; i++) {
+                    var d = td[i];
+                    var pct = Math.max(2, Math.round((d.count / maxCount) * 100));
+                    var color = barColors[i % barColors.length];
+                    html += '<div class="bar-row">';
+                    html += '<div class="bar-label">' + d.domain + '</div>';
+                    html += '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%; background:' + color + ';"></div></div>';
+                    html += '<div class="bar-count">' + d.count + '</div>';
+                    html += '</div>';
+                }
+                document.getElementById("topDomainsChart").innerHTML = html;
+            } else {
+                document.getElementById("topDomainsChart").innerHTML = '<div style="color:#6b7280; padding:20px; text-align:center;">No request data captured yet.</div>';
+            }
+        }
+
+        // ── Reset Metrics Command ──
+        function resetMetrics() {
+            if (!confirm("Are you sure you want to reset all request metrics and logs?")) return;
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://127.0.0.1:9080/__xai/metrics/reset", true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        logMsg("Metrics reset successfully.");
+                        pollMetrics();
+                        pollLogs();
+                    } else {
+                        logMsg("Error resetting metrics: " + xhr.statusText);
+                    }
+                }
+            };
+            try { xhr.send(); } catch(e) {}
+        }
+
+        // ── Logs Polling (via central /__xai/logs array) ──
+        function pollLogs() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "http://127.0.0.1:9080/__xai/logs?limit=150", true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        if (data.logs) {
+                            logEntries = [];
+                            for (var i = 0; i < data.logs.length; i++) {
+                                var log = data.logs[i];
+                                var d = new Date(log.ts);
+                                var tsStr = d.toTimeString().split(" ")[0];
+                                logEntries.push({
+                                    ts: tsStr,
+                                    domain: log.domain || "-",
+                                    mode: log.mode || "unknown",
+                                    status: log.status || 0,
+                                    latencyMs: Math.round(log.latencyMs || 0)
+                                });
+                            }
+                            renderLogs();
+                        }
+                    } catch(e) {}
+                }
+            };
+            try { xhr.send(); } catch(e) {}
+        }
+
+        function renderLogs() {
+            var container = document.getElementById("logContainer");
+            if (logEntries.length === 0) {
+                container.innerHTML = '<div style="color:#6b7280; padding:20px; text-align:center; font-size:12px;">Waiting for requests...</div>';
+                document.getElementById("logCount").innerText = "0 entries";
+                return;
+            }
+
+            var html = "";
+            for (var i = 0; i < logEntries.length; i++) {
+                var e = logEntries[i];
+                var badgeClass = statusBadgeClass(e.status);
+                html += '<div class="log-entry">';
+                html += '<span class="log-ts">' + e.ts + '</span>';
+                html += '<span class="badge ' + badgeClass + '">' + e.status + '</span>';
+                html += '<span class="log-mode ' + e.mode + '">' + e.mode + '</span>';
+                html += '<span class="log-domain">' + e.domain + '</span>';
+                html += '<span class="log-latency">' + e.latencyMs + 'ms</span>';
+                html += '</div>';
+            }
+            container.innerHTML = html;
+            document.getElementById("logCount").innerText = logEntries.length + " entries";
+
+            if (autoscroll) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        function clearLogs() {
+            logEntries = [];
+            renderLogs();
+        }
+
+        function toggleAutoscroll() {
+            autoscroll = !autoscroll;
+            document.getElementById("autoscrollLabel").innerText = "Autoscroll: " + (autoscroll ? "ON" : "OFF");
+        }
+
+        // ── Load Template in Mock Routes Area ──
+        function loadRouteTemplate() {
+            var sel = document.getElementById("routeTemplateSelect");
+            var val = sel.value;
+            if (!val) return;
+            
+            var templateText = "";
+            if (val === "json_mock") {
+                templateText = '[\n  {\n    "path": "/api/users",\n    "action": "mock",\n    "body": {\n      "status": "success",\n      "data": [\n        { "id": 1, "name": "Alice" },\n        { "id": 2, "name": "Bob" }\n      ]\n    }\n  }\n]';
+            } else if (val === "redirect_mock") {
+                templateText = '[\n  {\n    "path": "/legacy-page",\n    "action": "redirect",\n    "target": "/new-page"\n  }\n]';
+            } else if (val === "error_500") {
+                templateText = '[\n  {\n    "path": "/api/broken",\n    "action": "mock",\n    "status": 500,\n    "body": {\n      "error": "Internal Server Error",\n      "code": 500\n    }\n  }\n]';
+            } else if (val === "delay_mock") {
+                templateText = '[\n  {\n    "path": "/slow-endpoint",\n    "action": "mock",\n    "latencyMs": 2000,\n    "body": {\n      "message": "Delayed response"\n    }\n  }\n]';
+            }
+            
+            if (templateText) {
+                document.getElementById("cfgRoutes").value = templateText;
+            }
+            sel.value = ""; // Reset dropdown selection
+        }
+
+        // ── Website CRUD ──
+        function loadDomains() {
+            try {
+                // Use absolute path for folder to avoid working directory issues
+                var folderPath = htaFolder ? (htaFolder + "\\server\\websites") : "server\\websites";
+                var html = "";
+                var count = 0;
+                if (fso && fso.FolderExists(folderPath)) {
+                    var folder = fso.GetFolder(folderPath);
+                    var subfolders = new Enumerator(folder.SubFolders);
+                    for (; !subfolders.atEnd(); subfolders.moveNext()) {
+                        var sub = subfolders.item();
+                        var name = sub.Name.toLowerCase();
+                        count++;
+                        var selectedClass = (name === selectedDomain) ? " selected" : "";
+                        html += '<div class="domain-item' + selectedClass + '" onclick="selectDomain(\'' + name + '\')">';
+                        html += '<span>' + name + '</span>';
+                        html += '<span style="color:#6366f1; font-weight:600; font-size:11px;">edit</span>';
+                        html += '</div>';
+                    }
+                }
+                siteCount = count;
+                document.getElementById("domainsList").innerHTML = html || '<div style="padding:10px; color:#9ca3af; font-size:12px;">No websites created.</div>';
+            } catch (e) {
+                document.getElementById("domainsList").innerText = "Error: " + e.message;
+            }
+        }
+
+        function selectDomain(domain) {
+            selectedDomain = domain;
+            loadDomains();
+
+            document.getElementById("editorTitle").innerText = "Site Config: " + domain;
+            document.getElementById("editorForm").style.display = "block";
+
+            var cfgPath = htaFolder ? (htaFolder + "\\server\\websites\\" + domain + "\\directory.json") : ("server\\websites\\" + domain + "\\directory.json");
+            var config = {
+                mode: "local",
+                entry: "index.html",
+                latencyMs: 0,
+                watermark: { enabled: false, text: "DEVELOPMENT", color: "#ef4444" },
+                backend: null,
+                routes: []
+            };
+
+            try {
+                if (fso.FileExists(cfgPath)) {
+                    var file = fso.OpenTextFile(cfgPath, 1);
+                    var text = file.ReadAll();
+                    file.Close();
+                    if (text.replace(/\s/g, "").length > 0) {
+                        var parsed = JSON.parse(text);
+                        if (parsed.mode) config.mode = parsed.mode;
+                        if (parsed.entry) config.entry = parsed.entry;
+                        if (parsed.latencyMs) config.latencyMs = parsed.latencyMs;
+                        if (parsed.watermark) {
+                            config.watermark.enabled = !!parsed.watermark.enabled;
+                            if (parsed.watermark.text) config.watermark.text = parsed.watermark.text;
+                            if (parsed.watermark.color) config.watermark.color = parsed.watermark.color;
+                        }
+                        if (parsed.backend) config.backend = parsed.backend;
+                        if (parsed.routes) config.routes = parsed.routes;
+                    }
+                }
+            } catch (err) {
+                logMsg("Error parsing config: " + err.message);
+            }
+
+            document.getElementById("cfgMode").value = config.mode || "local";
+            document.getElementById("cfgEntry").value = config.entry;
+            document.getElementById("cfgLatency").value = config.latencyMs;
+            document.getElementById("cfgBackend").value = config.backend ? (config.backend.origin || "") : "";
+            document.getElementById("cfgBackendProfile").value = config.backend ? (config.backend.profile || "") : "";
+            document.getElementById("cfgWatermarkEnabled").checked = config.watermark.enabled;
+            document.getElementById("cfgWatermarkText").value = config.watermark.text || "";
+            document.getElementById("cfgWatermarkColor").value = config.watermark.color || "";
+            document.getElementById("cfgRoutes").value = JSON.stringify(config.routes, null, 2);
+        }
+
+        function createWebsite() {
+            var name = document.getElementById("newDomainName").value.replace(/^\s+|\s+$/g, "").toLowerCase();
+            var pack = document.getElementById("newDomainPack").value;
+            if (!name) { alert("Please enter a domain name."); return; }
+
+            logMsg("Scaffolding: " + name + " (" + pack + ")");
+            try {
+                shell.Run("python manage.py new-pack --pack " + pack + " --domain " + name, 0, true);
+                logMsg("Scaffold done. Syncing...");
+                shell.Run("python manage.py sync-domains", 0, true);
+                logMsg("Sync complete.");
+                document.getElementById("newDomainName").value = "";
+                loadDomains();
+                selectDomain(name);
+            } catch (e) {
+                logMsg("Error: " + e.message);
+            }
+        }
+
+        function deleteWebsite() {
+            if (!selectedDomain) return;
+            if (!confirm("Delete " + selectedDomain + " and all its files?")) return;
+
+            logMsg("Deleting: " + selectedDomain);
+            try {
+                var folderPath = htaFolder ? (htaFolder + "\\server\\websites\\" + selectedDomain) : ("server\\websites\\" + selectedDomain);
+                if (fso.FolderExists(folderPath)) {
+                    fso.DeleteFolder(folderPath, true);
+                }
+                shell.Run("python manage.py sync-domains", 0, true);
+                logMsg("Deleted.");
+                selectedDomain = "";
+                document.getElementById("editorForm").style.display = "none";
+                document.getElementById("editorTitle").innerText = "Select a Website to Edit";
+                loadDomains();
+            } catch (e) {
+                logMsg("Error: " + e.message);
+            }
+        }
+
+        function saveConfig() {
+            if (!selectedDomain) return;
+
+            var mode = document.getElementById("cfgMode").value;
+            var entry = document.getElementById("cfgEntry").value.replace(/^\s+|\s+$/g, "") || "index.html";
+            var latency = parseInt(document.getElementById("cfgLatency").value, 10) || 0;
+            var backendUrl = document.getElementById("cfgBackend").value.replace(/^\s+|\s+$/g, "");
+            var backendProfile = document.getElementById("cfgBackendProfile").value.replace(/^\s+|\s+$/g, "");
+            var wmEnabled = document.getElementById("cfgWatermarkEnabled").checked;
+            var wmText = document.getElementById("cfgWatermarkText").value.replace(/^\s+|\s+$/g, "") || "DEVELOPMENT";
+            var wmColor = document.getElementById("cfgWatermarkColor").value.replace(/^\s+|\s+$/g, "") || "#ef4444";
+            var routesStr = document.getElementById("cfgRoutes").value.replace(/^\s+|\s+$/g, "") || "[]";
+
+            var routes = [];
+            try {
+                routes = JSON.parse(routesStr);
+            } catch (err) {
+                alert("Mock Routes JSON is invalid!");
+                return;
+            }
+
+            var config = {
+                mode: mode,
+                entry: entry,
+                latencyMs: latency,
+                watermark: { enabled: wmEnabled, text: wmText, color: wmColor },
+                routes: routes
+            };
+
+            if (backendUrl) {
+                config.backend = { origin: backendUrl, profile: backendProfile || "custom" };
+            }
+
+            try {
+                var cfgPath = htaFolder ? (htaFolder + "\\server\\websites\\" + selectedDomain + "\\directory.json") : ("server\\websites\\" + selectedDomain + "\\directory.json");
+                var file = fso.CreateTextFile(cfgPath, true);
+                file.Write(JSON.stringify(config, null, 2));
+                file.Close();
+                logMsg("Saved config for " + selectedDomain);
+                alert("Config saved!");
+            } catch (e) {
+                logMsg("Save error: " + e.message);
+            }
+        }
+
+        // ── LAN IP Detection ──
+        function fetchLanInfo() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "http://127.0.0.1:9080/__xai/metrics", true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        if (data.serverVersion) {
+                            document.getElementById("footerInfo").innerText = "Control Plane: http://127.0.0.1:9080 | v" + data.serverVersion;
+                        }
+                    } catch(e) {}
+                }
+            };
+            try { xhr.send(); } catch(e) {}
+
+            var xhr2 = new XMLHttpRequest();
+            xhr2.open("GET", "http://127.0.0.1:9080/__xai/health?max=1", true);
+            xhr2.onreadystatechange = function() {
+                if (xhr2.readyState === 4 && xhr2.status === 200) {
+                    var badge = document.getElementById("lanBadge");
+                    badge.style.display = "inline";
+                }
+            };
+            try { xhr2.send(); } catch(e) {}
+        }
+
+        // ── Initialize ──
+        checkStatus();
+        loadDomains();
+        fetchLanInfo();
+        setInterval(checkStatus, 5000);
+        setInterval(pollMetrics, 2000);
+        setInterval(pollLogs, 2000); // Poll actual logs from /__xai/logs directly
+        setInterval(loadDomains, 10000);
+    </script>
+</body>
+</html>

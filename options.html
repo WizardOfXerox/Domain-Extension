@@ -1,0 +1,725 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Domain Extension – Developer Control Cockpit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #070913;
+        --sidebar: #0b0f19;
+        --card: rgba(17, 24, 39, 0.6);
+        --border: rgba(255, 255, 255, 0.08);
+        --border-hover: rgba(99, 102, 241, 0.35);
+        --fg: #f3f4f6;
+        --muted: #9ca3af;
+        --primary: #6366f1;
+        --primary-glow: rgba(99, 102, 241, 0.3);
+        --secondary: #3b82f6;
+        --ok: #10b981;
+        --ok-glow: rgba(16, 185, 129, 0.15);
+        --warn: #fbbf24;
+        --bad: #ef4444;
+        --bad-glow: rgba(239, 68, 68, 0.2);
+        --code-bg: rgba(0, 0, 0, 0.45);
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: var(--bg);
+        color: var(--fg);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        min-height: 100vh;
+        overflow: hidden;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        height: 100vh;
+        width: 100vw;
+      }
+      /* Sidebar */
+      .sidebar {
+        background: var(--sidebar);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 24px 16px;
+        box-sizing: border-box;
+      }
+      .sidebar-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 16px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #a5b4fc, #60a5fa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 32px;
+      }
+      .sidebar-brand svg {
+        stroke: var(--primary);
+      }
+      .sidebar-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex-grow: 1;
+      }
+      .sidebar-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border-radius: 8px;
+        color: var(--muted);
+        font-size: 13.5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        user-select: none;
+      }
+      .sidebar-item:hover {
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--fg);
+      }
+      .sidebar-item.active {
+        background: rgba(99, 102, 241, 0.08);
+        border: 1px solid rgba(99, 102, 241, 0.15);
+        color: #818cf8;
+      }
+      .sidebar-item svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        stroke-width: 2.2;
+        fill: none;
+      }
+      .sidebar-footer {
+        font-size: 11px;
+        color: var(--muted);
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        padding-top: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      /* Content Container */
+      .content {
+        padding: 40px;
+        overflow-y: auto;
+        box-sizing: border-box;
+        background: radial-gradient(circle at 50% 0%, #17153a 0%, var(--bg) 65%);
+        height: 100%;
+      }
+      .header-area {
+        margin-bottom: 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+      }
+      .subtitle {
+        color: var(--muted);
+        font-size: 13.5px;
+        margin-top: 4px;
+      }
+      /* Dashboard Sections */
+      .dashboard-section {
+        display: none;
+        animation: fadeIn 0.3s ease;
+      }
+      .dashboard-section.active {
+        display: block;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      /* Cards */
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(16px);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        transition: border-color 0.2s;
+      }
+      .card:hover {
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+      h2 {
+        margin: 0 0 16px 0;
+        font-size: 16px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #f3f4f6;
+      }
+      h2 svg {
+        stroke: var(--primary);
+        width: 20px;
+        height: 20px;
+        fill: none;
+      }
+      /* Forms & Controls */
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .input-group label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--muted);
+        letter-spacing: 0.5px;
+      }
+      input, select {
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid var(--border);
+        color: var(--fg);
+        padding: 9px 12px;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 13px;
+        outline: none;
+        transition: all 0.2s;
+      }
+      input:focus, select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 10px var(--primary-glow);
+      }
+      /* Custom Checkbox */
+      .checkbox-container {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        user-select: none;
+        font-size: 13.5px;
+        font-weight: 600;
+      }
+      .checkbox-container input {
+        opacity: 0;
+        width: 0; height: 0;
+        position: absolute;
+      }
+      .checkmark {
+        width: 18px;
+        height: 18px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        position: relative;
+        transition: all 0.2s;
+      }
+      .checkbox-container:hover input ~ .checkmark {
+        border-color: var(--border-hover);
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .checkbox-container input:checked ~ .checkmark {
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 0 8px var(--primary-glow);
+      }
+      .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+        left: 5px; top: 2px;
+        width: 4px; height: 8px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+      .checkbox-container input:checked ~ .checkmark:after {
+        display: block;
+      }
+      /* Buttons */
+      button {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+        color: var(--fg);
+        padding: 9px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: inherit;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      button:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.09);
+        border-color: rgba(255, 255, 255, 0.18);
+        transform: translateY(-1px);
+      }
+      button:active:not(:disabled) {
+        transform: translateY(0);
+      }
+      button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .btn-primary {
+        background: var(--primary);
+        border-color: rgba(99, 102, 241, 0.4);
+      }
+      .btn-primary:hover:not(:disabled) {
+        background: #4f46e5;
+        box-shadow: 0 0 14px var(--primary-glow);
+      }
+      .btn-danger {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: rgba(239, 68, 68, 0.25);
+        color: #fca5a5;
+      }
+      .btn-danger:hover:not(:disabled) {
+        background: rgba(239, 68, 68, 0.25);
+        border-color: rgba(239, 68, 68, 0.4);
+      }
+      .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      /* Table styling */
+      .table-container {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-top: 14px;
+        background: rgba(0, 0, 0, 0.2);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13.5px;
+      }
+      th {
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--border);
+        padding: 12px 16px;
+        text-align: left;
+      }
+      td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover td {
+        background: rgba(255, 255, 255, 0.015);
+      }
+      /* Code and Dumps */
+      pre {
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12.5px;
+        line-height: 1.5;
+        overflow: auto;
+        color: #a5b4fc;
+        margin-top: 12px;
+        max-height: 320px;
+        white-space: pre-wrap;
+      }
+      /* Status Banner */
+      .msg {
+        font-size: 13px;
+        background: rgba(16, 185, 129, 0.06);
+        border: 1px solid rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        padding: 10px 14px;
+        border-radius: 8px;
+        margin-top: 14px;
+        display: none;
+        line-height: 1.4;
+      }
+      .msg.err {
+        background: rgba(239, 68, 68, 0.06);
+        border: 1px solid rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+      }
+      .msg:not(:empty) {
+        display: block;
+      }
+      /* Live stats */
+      .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .stat-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .stat-val {
+        font-size: 24px;
+        font-weight: 700;
+        font-family: 'JetBrains Mono', monospace;
+        color: #818cf8;
+      }
+      .stat-lbl {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <!-- Left Sidebar -->
+      <div class="sidebar">
+        <div>
+          <div class="sidebar-brand">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3z"></path><path d="M6 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3z"></path></svg>
+            <span>Domain Extension</span>
+          </div>
+          <div class="sidebar-menu">
+            <div class="sidebar-item active" data-target="sec-dashboard">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
+              <span>Console Dashboard</span>
+            </div>
+            <div class="sidebar-item" data-target="sec-routing">
+              <svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"></path><path d="M19 3h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"></path><path d="M9 13H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2z"></path><path d="M19 13h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2z"></path></svg>
+              <span>Local DNS Rules</span>
+            </div>
+            <div class="sidebar-item" data-target="sec-backend">
+              <svg viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"></path></svg>
+              <span>Backend Config</span>
+            </div>
+            <div class="sidebar-item" data-target="sec-devices">
+              <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+              <span>Tethered Devices</span>
+            </div>
+            <div class="sidebar-item" data-target="sec-github">
+              <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+              <span>GitHub Repos</span>
+            </div>
+          </div>
+        </div>
+        <div class="sidebar-footer">
+          <span>Control Panel</span>
+          <span style="font-family:'JetBrains Mono',monospace;color:#818cf8">v3.0</span>
+        </div>
+      </div>
+
+      <!-- Right Dashboard Content -->
+      <div class="content">
+        <div class="header-area">
+          <div>
+            <h1 id="page-title">Console Dashboard</h1>
+            <div class="subtitle" id="page-subtitle">Real-time HTTP requests diagnostics stream.</div>
+          </div>
+          <div class="btn-group">
+            <button id="refreshAll" class="btn-primary">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transform:translateY(-0.5px)"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+              <span>Refresh Stack</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="msg" id="msg"></div>
+
+        <!-- TAB 1: Console Dashboard -->
+        <div class="dashboard-section active" id="sec-dashboard">
+          <div class="stats-row">
+            <div class="stat-card">
+              <span class="stat-val" id="stat-total-req">0</span>
+              <span class="stat-lbl">Processed Requests</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-val" id="stat-avg-latency">0 ms</span>
+              <span class="stat-lbl">Average Latency</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-val" id="stat-routing-active" style="color:#10b981">Active</span>
+              <span class="stat-lbl">Local Proxy Route</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>
+              <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Live Request Trace Stream</span>
+            </h2>
+            <div class="btn-group">
+              <button id="startStream" class="btn-primary">▶ Start Trace</button>
+              <button id="stopStream" class="btn-danger">⏹ Stop</button>
+              <button id="clearStream">Clear Console</button>
+              <span id="streamStatus" style="font-size:12px;color:var(--muted);align-self:center;margin-left:12px">stopped</span>
+            </div>
+            <div class="table-container" style="max-height: 480px; overflow-y: auto;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Domain</th>
+                    <th>Routing Mode</th>
+                    <th>Status</th>
+                    <th style="text-align:right">Latency</th>
+                  </tr>
+                </thead>
+                <tbody id="streamBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: Local DNS Rules -->
+        <div class="dashboard-section" id="sec-routing">
+          <div class="card">
+            <h2>Local PAC Domain Rules</h2>
+            <div class="form-grid">
+              <div class="input-group">
+                <label>Add New Local Domain Override</label>
+                <input id="newDomain" placeholder="e.g., customsite.fake or dev.mycompany.com" />
+              </div>
+            </div>
+            <div class="btn-group">
+              <button id="addDomain" class="btn-primary">Add Rule</button>
+              <button id="clearDomains" class="btn-danger">Clear All PAC Rules</button>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Intercepted Domain name</th>
+                    <th style="width: 120px">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="domainsBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <h2>PAC Global Interceptor Options</h2>
+            <div class="row">
+              <label class="checkbox-container">
+                <input type="checkbox" id="proxyEnabled" />
+                <span class="checkmark"></span>
+                <span>Enable Proxy PAC Router</span>
+              </label>
+              <button id="saveProxy" class="btn-primary">Save Settings</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: Backend Config -->
+        <div class="dashboard-section" id="sec-backend">
+          <div class="card">
+            <h2>Site Mapping & Server Setup</h2>
+            <div class="form-grid">
+              <div class="input-group">
+                <label>Target Domain Name</label>
+                <div style="display:flex;gap:8px">
+                  <input id="cfgDomain" placeholder="e.g. laravel.fake" style="flex-grow:1" />
+                  <button id="loadCfg">Load Site Config</button>
+                </div>
+              </div>
+              <div class="input-group">
+                <label>Entry Directory/Index File</label>
+                <input id="cfgEntry" placeholder="index.html" />
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="input-group">
+                <label>Local Backend Server Origin</label>
+                <input id="cfgBackend" placeholder="http://127.0.0.1:8000" />
+              </div>
+              <div class="input-group">
+                <label>Profile Config Presets</label>
+                <div style="display:flex;gap:8px">
+                  <select id="cfgBackendProfile" style="flex-grow:1">
+                    <option value="">(none)</option>
+                  </select>
+                  <button id="applyProfile">Apply Preset</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="input-group">
+                <label>Server Type</label>
+                <input id="cfgBackendType" placeholder="php | node | python | static" />
+              </div>
+              <div class="input-group">
+                <label>Health Endpoint Path</label>
+                <input id="cfgHealthPath" placeholder="/" />
+              </div>
+              <div class="input-group">
+                <label>WebSocket Server Tunnel Path</label>
+                <input id="cfgWsPath" placeholder="/ws" />
+              </div>
+            </div>
+
+            <div class="btn-group" style="margin-top:16px">
+              <button id="saveCfg" class="btn-primary">Save Mapping Configuration</button>
+              <button id="clearBackend" class="btn-danger">Clear Reverse Proxy</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Dynamic Backend Test & Diagnostic Probes</h2>
+            <div class="form-grid">
+              <div class="input-group">
+                <label>WS Socket Probe Path (Optional)</label>
+                <input id="probeWsPath" placeholder="/ws" />
+              </div>
+            </div>
+            <button id="probeBackend" class="btn-primary">Run HTTP + WS Connection Test</button>
+            <pre id="probeOut">(No test run yet)</pre>
+          </div>
+        </div>
+
+        <!-- TAB 4: Tethered Devices -->
+        <div class="dashboard-section" id="sec-devices">
+          <div class="card">
+            <h2>Tethered Mobile Devices & DNS Overrides</h2>
+            <div class="subtitle" style="margin-bottom:20px;line-height:1.5">
+              Configure overrides to route specific domains to their original/live versions on target mobile devices.
+              This completely bypasses HSTS and SSL warnings on devices that cannot run the browser extension.
+            </div>
+
+            <div style="background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15);padding:16px;border-radius:12px;margin-bottom:24px;line-height:1.6">
+              <strong>📱 How to configure your mobile phone/tablet:</strong><br/>
+              1. Connect your phone to the same Wi-Fi network as this PC.<br/>
+              2. Go to phone Wi-Fi Settings → Advanced → <strong>DNS Server</strong>.<br/>
+              3. Set the DNS address to this PC's LAN IP: <strong style="color:#fbbf24;font-family:monospace" id="tether-lan-ip">checking...</strong><br/>
+              4. To trust local HTTPS hijacked pages on your phone: open <a href="javascript:void(0)" id="tether-ca-link" target="_blank" style="color:#10b981;font-weight:700">http://<span class="lan-ip-text">127.0.0.1</span>:9080/__xai/ca</a> in your phone's browser, download and install the CA certificate, and trust it.<br/>
+              5. To bypass SSL/HSTS errors on high-security domains (like <code>www.google.com</code>), configure a <strong>proxy</strong> rule for that device IP below, or open <a href="javascript:void(0)" id="tether-portal-link" target="_blank" style="font-weight:700">http://<span class="lan-ip-text">127.0.0.1</span>:9080/__xai/portal</a> on your phone to toggle it.
+            </div>
+
+            <div class="form-grid">
+              <div class="input-group">
+                <label>Device IP Address</label>
+                <input id="clientIpInput" placeholder="e.g. 192.168.1.15" />
+              </div>
+              <div class="input-group">
+                <label>Intercepted Domain</label>
+                <input id="clientDomainInput" placeholder="e.g. www.google.com" />
+              </div>
+              <div class="input-group">
+                <label>Device Routing Mode</label>
+                <select id="clientModeSelect">
+                  <option value="proxy">Proxy (Bypass to Original Live Site)</option>
+                  <option value="local">Local (Serve Local Directory Mock)</option>
+                </select>
+              </div>
+            </div>
+            <button id="addClientOverrideBtn" class="btn-primary">Add Override Rule</button>
+
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Device IP</th>
+                    <th>Domain</th>
+                    <th>Target Mode</th>
+                    <th style="width: 120px">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="clientOverridesBody">
+                  <tr>
+                    <td colspan="4" style="text-align:center;color:var(--muted);padding:24px">No active overrides registered.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 5: GitHub Repos -->
+        <div class="dashboard-section" id="sec-github">
+          <div class="card">
+            <h2>GitHub Deployment Rules</h2>
+            <div class="form-grid">
+              <div class="input-group">
+                <label>Map Domain</label>
+                <input id="ghDomain" placeholder="myapp.fake" />
+              </div>
+              <div class="input-group">
+                <label>GitHub Repository HTTPS Clone URL</label>
+                <input id="ghRepo" placeholder="https://github.com/owner/repo.git" />
+              </div>
+              <div class="input-group">
+                <label>Branch</label>
+                <input id="ghBranch" value="main" />
+              </div>
+            </div>
+            <div class="btn-group" style="margin-bottom:16px">
+              <button id="ghAdd" class="btn-primary">Add Repo Source</button>
+              <label class="checkbox-container" style="align-self:center;margin-left:12px">
+                <input id="ghKeepFiles" type="checkbox" />
+                <span class="checkmark"></span>
+                <span>Keep Files on Remove</span>
+              </label>
+            </div>
+            <div class="btn-group">
+              <button id="ghList">List Mapped Repos</button>
+              <button id="ghStatus">Sync Status Check</button>
+              <button id="ghPull">Pull Domain Files</button>
+              <button id="ghPullAll">Pull All Repos</button>
+              <button id="ghRemove" class="btn-danger">Remove Mapped Repo</button>
+            </div>
+            <pre id="ghOut">(no Github action outputs)</pre>
+          </div>
+
+          <div class="card">
+            <h2>Active Servers Diagnostic Outputs</h2>
+            <div class="btn-group">
+              <button id="loadMetrics">Fetch Overall Metrics</button>
+              <button id="loadHealth">Check Site Health Logs</button>
+              <input id="healthDomains" placeholder="Domain CSV (optional)" style="min-width: 200px" />
+              <input id="healthWsPath" placeholder="WS Path (optional)" style="min-width: 120px" />
+            </div>
+            <pre id="healthOut">(no site health reports)</pre>
+            <pre id="metricsOut">(no overall metrics reports)</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="options.js"></script>
+  </body>
+</html>
