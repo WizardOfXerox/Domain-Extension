@@ -317,10 +317,20 @@ curl.exe -sS "http://127.0.0.1:9080/__xai/health?max=50"
   - Performs HTTP probe and WS connect probe against configured backend.
 - `/health?...`
   - Bulk per-domain summary with probe results.
+- `/ca` (GET)
+  - Downloads the CA root certificate file directly to mobile/client devices.
+- `/view/{domain}` (GET)
+  - Standard HTTP proxy routing page to bypass mobile HSTS blocks on target domains (e.g. `http://<lan-ip>:9080/__xai/view/www.google.com`).
+- `/client-overrides` (GET, POST, DELETE)
+  - CRUD operations to manage IP-specific routing rules on tethered mobile devices.
 - `/github/list`, `/github/status`
   - Returns text output from GitHub mapping/status commands.
 - `/github/add`, `/github/pull`, `/github/pull-all`, `/github/remove`
   - Mutating GitHub source actions for domain-repo management.
+- `/___xai/portal?domain=...`
+  - Served HTML routing toggle dashboard on virtual hosts to let LAN clients override routing mode.
+- `/___xai/client-mode`
+  - Sets client routing override mode for the requester's IP address.
 
 ## Backend Config Schema
 

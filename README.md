@@ -8,13 +8,15 @@ An advanced developer tool to hijack any web domain (e.g. `https://www.google.co
 
 *   **FastAPI & Async Engine**: Upgraded backend from Flask to FastAPI + Uvicorn + HTTPX for high-throughput, non-blocking proxying and live WebSocket tunneling.
 *   **Port-Free Access**: Binds the HTTPS vhost server to the standard HTTPS port (`443`) by default, enabling clean URLs without port suffixes (e.g., `https://dashboard.fake/`).
-*   **HTA CRUD Dashboard**: Native Windows control center GUI (`control_panel.hta`) providing full Create, Read, Update, Delete (CRUD) operations for scaffolding websites and updating `directory.json` settings.
+*   **HTA CRUD Dashboard**: Native Windows control center GUI (`control_panel.hta`) providing full Create, Read, Update, Delete (CRUD) operations for scaffolding websites, managing mobile settings, and syncing GitHub repos.
 *   **Wildcard Subdomain Routing**: Extension PAC routing supports both exact domains and wildcard subdomains (e.g., `*.google.com` matches all subdomains).
-*   **Local Network (LAN) Support**: Built-in UDP DNS server intercepts fake-TLD queries and resolves them to your PC's LAN IP automatically. Devices on the same network just set your PC as their DNS server—no proxy configuration needed.
+*   **Local Network (LAN) & Mobile Support**: Built-in UDP DNS server intercepts fake-TLD queries. Trust local HTTPS pages by visiting `http://<lan-ip>:9080/__xai/ca` directly on your mobile device.
+*   **Tethered Devices & Overrides**: Route target domains for specific mobile device IPs to either local mock folders or proxy them to original live sites to bypass HSTS and SSL warnings.
+*   **GitHub Repos Sync**: Map custom domains to public/private GitHub repositories, configuring branches and pulling updates with a single click.
 *   **API Mocking**: Return canned JSON/text mock responses directly from your `directory.json` configuration for specified path globs.
 *   **Developer Watermark/Banner**: Inject custom coloured overlay banners into HTML responses automatically.
 *   **Styled Directory Explorer**: Visually appealing, interactive folder listings when the main entry file (`index.html`) is missing in a website's folder.
-*   **Live Request Dashboard**: Real-time request telemetry logs streamed directly via Server-Sent Events (SSE) into the options page.
+*   **Live Request Dashboard**: Real-time request telemetry logs streamed directly via Server-Sent Events (SSE) into the options page and HTA GUI.
 
 ---
 
@@ -53,13 +55,15 @@ control_panel.hta
 ---
 
 ## 🖥️ HTA CRUD Control Center
-
+ 
 The native Windows control center (`control_panel.hta`) allows you to manage all aspects of the application visually:
-
+ 
 1.  **Launch & Status Monitoring**: Pulsing status indicators displaying server state, and buttons to Start, Stop, or Regenerate Certificates.
 2.  **Create Websites**: Quickly scaffold new website folders using built-in framework templates (NextJS, Vite React, php-xampp, Laravel, WordPress).
 3.  **Config Editor**: Edit entry files, inject latency delays, setup developer watermark text/colors, configure local backend proxy parameters, or manage mock routes without touching JSON files.
-4.  **Delete Websites**: Clean up directory folders and rebuild domain configuration files in one click.
+4.  **Tethered Devices & Overrides**: Add/remove overrides for specific device IPs, get CA trust certificate installation instructions, and LAN URLs.
+5.  **GitHub Deployment rules**: Connect domains directly to GitHub repositories, check branch status, and trigger Git pull operations.
+6.  **Delete Websites**: Clean up directory folders and rebuild domain configuration files in one click.
 
 ---
 
@@ -108,10 +112,10 @@ Follow these steps to configure your environment for mobile testing:
 
 ### Step 2: Configure Trust Certificate on Phone
 Your phone must trust the local development certificate for HTTPS to work:
-1. Run `extract_ca.bat` on your PC. This copies `rootCA.pem` to your project folder and highlights it in Explorer.
-2. Send `rootCA.pem` to your phone (email, AirDrop, messaging, etc.).
-3. **On iOS:** Open the file to download the profile. Go to **Settings > Profile Downloaded > Install**, then go to **Settings > General > About > Certificate Trust Settings** and enable full trust for *mkcert*.
-4. **On Android:** Go to **Settings > Security > Encryption & Credentials > Install a Certificate > CA Certificate** and select the file.
+1. **Direct Download (easiest)**: Open your phone's browser and go to `http://<your-pc-ip>:9080/__xai/ca` to download the root CA certificate file directly.
+2. **Or Manual Export**: Run `extract_ca.bat` on your PC, then send the copied `rootCA.pem` to your phone (email, AirDrop, etc.).
+3. **On iOS**: Go to **Settings > Profile Downloaded > Install**, then go to **Settings > General > About > Certificate Trust Settings** and enable full trust for *mkcert*.
+4. **On Android**: Go to **Settings > Security > Encryption & Credentials > Install a Certificate > CA Certificate** and select the downloaded file.
 
 ---
 
