@@ -1,4 +1,4 @@
-# Domain Extension v3.0
+# Domain Extension v3.1
 
 An advanced developer tool to hijack any web domain (e.g. `https://www.google.com` or custom `https://app.fake`) and redirect it to your local static files or local backend servers (PHP/XAMPP, Node.js, Python, Laravel, Wordpress) without altering your system `hosts` files.
 
@@ -8,6 +8,8 @@ An advanced developer tool to hijack any web domain (e.g. `https://www.google.co
 
 *   **FastAPI & Async Engine**: Upgraded backend from Flask to FastAPI + Uvicorn + HTTPX for high-throughput, non-blocking proxying and live WebSocket tunneling.
 *   **Port-Free Access**: Binds the HTTPS vhost server to the standard HTTPS port (`443`) by default, enabling clean URLs without port suffixes (e.g., `https://dashboard.fake/`).
+*   **Universal Web Dashboard**: Responsive, cross-platform control center served directly at `http://localhost:9080/dashboard` and over LAN, accessible from any browser (desktop, tablet, mobile).
+*   **Mobile QR Code Onboarding**: Instantly pair mobile devices by scanning generated QR codes on the dashboard or HTA to download root CA certs, open client routing portals, or preview local mock folders.
 *   **HTA CRUD Dashboard**: Native Windows control center GUI (`control_panel.hta`) providing full Create, Read, Update, Delete (CRUD) operations for scaffolding websites, managing mobile settings, and syncing GitHub repos.
 *   **Wildcard Subdomain Routing**: Extension PAC routing supports both exact domains and wildcard subdomains (e.g., `*.google.com` matches all subdomains).
 *   **Local Network (LAN) & Mobile Support**: Built-in UDP DNS server intercepts fake-TLD queries. Trust local HTTPS pages by visiting `http://<lan-ip>:9080/__xai/ca` directly on your mobile device.

@@ -15,7 +15,7 @@
         showintaskbar="yes" 
         singleinstance="yes" 
         sysmenu="yes" 
-        version="3.0" 
+        version="3.1" 
         windowstate="normal"
     />
     <style>
@@ -600,10 +600,16 @@
                     Go to Wi-Fi Settings → Advanced → <strong>DNS Server</strong>.<br/>
                     Set DNS IP to this PC: <strong style="color:#fbbf24;" id="tether-lan-ip">checking...</strong>
                 </div>
-                <div style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.15); padding:14px; border-radius:8px; line-height:1.6;">
-                    <strong>2. Trust local HTTPS pages:</strong><br/>
-                    Open this URL on your phone browser to download CA cert:<br/>
-                    <a href="#" id="tether-ca-link" target="_blank" style="color:#10b981; font-weight:700;">checking...</a>
+                <div style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.15); padding:14px; border-radius:8px; line-height:1.6; display:flex; gap:16px; align-items:center;">
+                    <div style="flex:1;">
+                        <strong>2. Trust local HTTPS pages:</strong><br/>
+                        Open this URL on your phone browser to download CA cert:<br/>
+                        <a href="#" id="tether-ca-link" target="_blank" style="color:#10b981; font-weight:700;">checking...</a>
+                    </div>
+                    <div style="background:#fff; padding:6px; border-radius:8px; text-align:center;">
+                        <img id="tether-qr-img" src="" alt="Scan QR" style="width:90px; height:90px; display:block;" />
+                        <span style="color:#000; font-size:9px; font-weight:700;">Scan for CA</span>
+                    </div>
                 </div>
                 <div style="background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.15); padding:14px; border-radius:8px; line-height:1.6;">
                     <strong>3. Bypassing HTTPS/HSTS Warnings:</strong><br/>
@@ -708,7 +714,7 @@
 
     <!-- ══ Footer ══ -->
     <div class="footer">
-        <span>Domain Extension v3.0</span>
+        <span>Domain Extension v3.1</span>
         <span id="footerInfo">Control Plane: http://127.0.0.1:9080</span>
     </div>
 
@@ -852,6 +858,11 @@
                 if (caLink) {
                     caLink.href = "http://" + serverLanIp + ":9080/__xai/ca";
                     caLink.innerText = "http://" + serverLanIp + ":9080/__xai/ca";
+                }
+
+                var qrImg = document.getElementById("tether-qr-img");
+                if (qrImg) {
+                    qrImg.src = "http://" + serverLanIp + ":9080/__xai/qr?text=" + encodeURIComponent("http://" + serverLanIp + ":9080/__xai/ca");
                 }
 
                 var portalLink = document.getElementById("tether-portal-link");

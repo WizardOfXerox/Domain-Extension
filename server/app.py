@@ -16,6 +16,7 @@ import ctypes
 import fnmatch
 import html
 import http.client
+import io
 import json
 import logging
 import struct
@@ -182,7 +183,7 @@ DEFAULT_CLEAR_SITE_DATA = os.environ.get("XAI_CLEAR_SITE_DATA", "1").strip() not
     "False",
 )
 
-SERVER_VERSION = "3.0"
+SERVER_VERSION = "3.1"
 CTRL_TOKEN = os.environ.get("XAI_CTRL_TOKEN", "").strip()
 BACKEND_ALLOWLIST_ENV = [
     x.strip().lower()
@@ -1372,6 +1373,18 @@ def _handle_mock_route(route: dict) -> Response:
 builtins_max = max
 
 
+def _render_dashboard_html() -> str:
+    dash_path = os.path.join(HERE, "dashboard.html")
+    if os.path.isfile(dash_path):
+        try:
+            with open(dash_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            return content.replace("__LAN_IP__", _get_lan_ip()).replace("__VERSION__", SERVER_VERSION)
+        except Exception as e:
+            LOG.warning("Failed to read dashboard.html: %s", e)
+    return f"<h1>Domain Extension v{SERVER_VERSION}</h1><p>Universal Web Dashboard</p>"
+
+
 # ---------------------------------------------------------------------------
 # Control Plane App
 # ---------------------------------------------------------------------------
@@ -1384,6 +1397,52 @@ def create_control_app() -> FastAPI:
         allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["Content-Type", "X-XAI-Token"],
     )
+
+    @app.get("/")
+    @app.get("/dashboard")
+    @app.get("/__xai/dashboard")
+    async def dashboard_view(request: Request):
+        return HTMLResponse(content=_render_dashboard_html(), status_code=200)
+
+    @app.get("/__xai/qr")
+    async def qr_code(request: Request, text: str = ""):
+        text = text.strip()
+        if not text:
+            return Response(content="text query parameter is required", status_code=400, media_type="text/plain")
+        try:
+            import qrcode
+            import qrcode.image.svg
+            factory = qrcode.image.svg.SvgPathImage
+            img = qrcode.make(text, image_factory=factory, box_size=10, border=2)
+            buf = io.BytesIO()
+            img.save(buf)
+            return Response(
+                content=buf.getvalue(),
+                media_type="image/svg+xml",
+                headers={"Cache-Control": "public, max-age=3600"},
+            )
+        except Exception as e:
+            LOG.warning("Failed to generate QR code: %s", e)
+            err_svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150"><text x="10" y="75" fill="red">QR Error</text></svg>'
+            return Response(content=err_svg, media_type="image/svg+xml")
+
+    @app.delete("/__xai/websites/{domain}")
+    async def delete_website(request: Request, domain: str):
+        denied = _check_ctrl_token(request)
+        if denied is not None:
+            return denied
+        domain = domain.strip().lower()
+        if not domain:
+            return JSONResponse({"error": "domain is required"}, status_code=400)
+        root = _site_root(domain)
+        if not os.path.isdir(root):
+            return JSONResponse({"error": "Website not found"}, status_code=404)
+        try:
+            shutil.rmtree(root)
+            _auto_regen_certs()
+            return JSONResponse({"ok": True, "message": f"Website {domain} deleted"})
+        except Exception as e:
+            return JSONResponse({"error": str(e)}, status_code=500)
 
     @app.api_route("/__xai/client-mode", methods=["GET", "POST", "OPTIONS"])
     async def set_client_mode_ctrl(request: Request):

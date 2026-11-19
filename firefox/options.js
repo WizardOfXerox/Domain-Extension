@@ -300,6 +300,11 @@ async function loadLanIp() {
       caLink.href = `http://${serverLanIp}:9080/__xai/ca`;
       caLink.innerHTML = `http://${serverLanIp}:9080/__xai/ca`;
     }
+
+    const qrImg = document.getElementById("tether-qr-img");
+    if (qrImg) {
+      qrImg.src = `http://${serverLanIp}:9080/__xai/qr?text=${encodeURIComponent(`http://${serverLanIp}:9080/__xai/ca`)}`;
+    }
   } catch (err) {
     console.error("Failed to load LAN IP:", err);
   }

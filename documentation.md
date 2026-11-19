@@ -1,15 +1,16 @@
-# Domain Extension - Documentation (v3.0)
+# Domain Extension - Documentation (v3.1)
 
 ## What this project does
 
 This project lets you keep URLs like `https://www.google.com/...` or `https://example.fake/...` while loading content from your local machine.
 
-Current architecture (v3.0):
+Current architecture (v3.1):
 - Browser extension PAC routing -> local proxy `127.0.0.1:9081`
-- Control plane API -> `http://127.0.0.1:9080/__xai/*` (FastAPI + Uvicorn)
+- Control plane API & Universal Web Dashboard -> `http://127.0.0.1:9080/dashboard` (FastAPI + Uvicorn)
 - Local HTTPS vhost server -> `https://[::]:443` (FastAPI + Uvicorn)
 - Async upstream fetching via `httpx` (replaces curl.exe subprocesses)
 - Built-in LAN DNS server -> `udp://0.0.0.0:53` (intercepts fake TLDs, relays others)
+- Mobile QR Code Onboarding Station -> Instant camera-scan pairing for CA certificates and portals
 
 Routing behavior:
 - Fake TLDs (`.fake`, `.test`, `.custom`, `.ssx`) route local automatically.

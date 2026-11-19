@@ -621,13 +621,20 @@
               This completely bypasses HSTS and SSL warnings on devices that cannot run the browser extension.
             </div>
 
-            <div style="background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15);padding:16px;border-radius:12px;margin-bottom:24px;line-height:1.6">
-              <strong>📱 How to configure your mobile phone/tablet:</strong><br/>
-              1. Connect your phone to the same Wi-Fi network as this PC.<br/>
-              2. Go to phone Wi-Fi Settings → Advanced → <strong>DNS Server</strong>.<br/>
-              3. Set the DNS address to this PC's LAN IP: <strong style="color:#fbbf24;font-family:monospace" id="tether-lan-ip">checking...</strong><br/>
-              4. To trust local HTTPS hijacked pages on your phone: open <a href="javascript:void(0)" id="tether-ca-link" target="_blank" style="color:#10b981;font-weight:700">http://<span class="lan-ip-text">127.0.0.1</span>:9080/__xai/ca</a> in your phone's browser, download and install the CA certificate, and trust it.<br/>
-              5. To bypass SSL/HSTS errors on high-security domains (like <code>www.google.com</code>), configure a <strong>proxy</strong> rule for that device IP below, or open <a href="javascript:void(0)" id="tether-portal-link" target="_blank" style="font-weight:700">http://<span class="lan-ip-text">127.0.0.1</span>:9080/__xai/portal</a> on your phone to toggle it.
+            <div style="background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15);padding:16px;border-radius:12px;margin-bottom:24px;line-height:1.6;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+              <div style="flex:1;min-width:280px">
+                <strong>📱 How to configure your mobile phone/tablet:</strong><br/>
+                1. Connect your phone to the same Wi-Fi network as this PC.<br/>
+                2. Go to phone Wi-Fi Settings → Advanced → <strong>DNS Server</strong>.<br/>
+                3. Set the DNS address to this PC's LAN IP: <strong style="color:#fbbf24;font-family:monospace" id="tether-lan-ip">checking...</strong><br/>
+                4. To trust local HTTPS hijacked pages on your phone: open <a href="javascript:void(0)" id="tether-ca-link" target="_blank" style="color:#10b981;font-weight:700">http://<span class="lan-ip-text">127.0.0.1</span>:9080/__xai/ca</a> in your phone's browser, download and install the CA certificate, and trust it.<br/>
+                5. To bypass SSL/HSTS errors on high-security domains (like <code>www.google.com</code>), configure a <strong>proxy</strong> rule for that device IP below, or open <a href="javascript:void(0)" id="tether-portal-link" target="_blank" style="font-weight:700">http://<span class="lan-ip-text">127.0.0.1</span>:9080/__xai/portal</a> on your phone to toggle it.<br/>
+                6. <strong>Universal Web Dashboard:</strong> Open <a href="http://127.0.0.1:9080/dashboard" target="_blank" style="color:#6366f1;font-weight:700">http://<span class="lan-ip-text">127.0.0.1</span>:9080/dashboard</a> for mobile-friendly control center.
+              </div>
+              <div style="background:#fff;padding:8px;border-radius:10px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,0.4)">
+                <img id="tether-qr-img" src="" alt="Scan QR" style="width:130px;height:130px;display:block" />
+                <div style="font-size:10px;color:#111;font-weight:700;margin-top:4px">Scan to Download CA</div>
+              </div>
             </div>
 
             <div class="form-grid">

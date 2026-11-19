@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Domain Extension – Universal Control Center</title>
+    <style>
+        :root {
+            --bg: #030712;
+            --card: #0b0f19;
+            --card-alt: #0f172a;
+            --border: #1f2937;
+            --border-light: #374151;
+            --text: #f9fafb;
+            --muted: #9ca3af;
+            --dim: #6b7280;
+            --primary: #10b981;
+            --primary-glow: rgba(16, 185, 129, 0.15);
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --danger: #ef4444;
+            --warn: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Header ── */
+        header {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header-logo {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .header-tag {
+            font-size: 10px;
+            font-weight: 700;
+            background: var(--primary-glow);
+            color: var(--primary);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 2px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--dim);
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .status-dot.online {
+            background: var(--primary);
+            box-shadow: 0 0 8px var(--primary);
+        }
+        .lan-badge {
+            font-size: 11px;
+            color: var(--accent);
+            background: var(--accent-glow);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        /* ── Nav Tabs ── */
+        nav.tab-bar {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            padding: 0 20px;
+            overflow-x: auto;
+            white-space: nowrap;
+            gap: 4px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--muted);
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* ── Main Layout ── */
+        main {
+            flex: 1;
+            padding: 20px;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        /* ── Cards & Grid ── */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .card-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+        @media (max-width: 900px) {
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+        }
+
+        /* ── Stat Cards ── */
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+        }
+        .stat-val { font-size: 28px; font-weight: 800; color: var(--primary); margin: 2px 0; }
+        .stat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* ── Buttons & Inputs ── */
+        button, .btn {
+            background: #1f2937;
+            border: 1px solid var(--border-light);
+            color: var(--text);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: center;
+        }
+        button:hover, .btn:hover { background: #374151; border-color: #4b5563; }
+        .btn-primary { background: var(--primary); border-color: var(--primary); color: #000; }
+        .btn-primary:hover { background: #34d399; border-color: #34d399; }
+        .btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .btn-accent:hover { background: #4f46e5; border-color: #4f46e5; }
+        .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+        .btn-danger:hover { background: #f87171; border-color: #f87171; }
+        .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+        .form-row { margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; }
+        .form-row label { font-size: 11px; color: var(--muted); font-weight: 600; }
+        input, select, textarea {
+            background: #030712;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* ── Services Matrix ── */
+        .service-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-alt);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+        .service-row span { font-weight: 600; color: #d1d5db; }
+        .indicator-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--danger);
+            display: inline-block;
+            box-shadow: 0 0 6px var(--danger);
+        }
+        .indicator-dot.online {
+            background: var(--primary);
+            box-shadow: 0 0 6px var(--primary);
+        }
+
+        /* ── QR Station Card ── */
+        .qr-card {
+            background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(16,185,129,0.06));
+            border: 1px solid rgba(99,102,241,0.25);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .qr-layout {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .qr-preview {
+            background: #fff;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 170px;
+            height: 170px;
+            flex-shrink: 0;
+        }
+        .qr-preview img {
+            width: 150px;
+            height: 150px;
+            display: block;
+        }
+        .qr-details { flex: 1; min-width: 250px; }
+        .qr-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .qr-tab-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            color: var(--muted);
+            cursor: pointer;
+        }
+        .qr-tab-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        /* ── Websites List ── */
+        .website-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: var(--card-alt);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .website-item:hover { border-color: var(--primary); }
+        .website-item.selected {
+            border-color: var(--accent);
+            background: rgba(99,102,241,0.12);
+        }
+        .pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .pill-local { background: rgba(16,185,129,0.15); color: var(--primary); border: 1px solid rgba(16,185,129,0.3); }
+        .pill-proxy { background: rgba(245,158,11,0.15); color: var(--warn); border: 1px solid rgba(245,158,11,0.3); }
+
+        /* ── Tables ── */
+        .table-wrap {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow-x: auto;
+            background: #030712;
+        }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
+        th, td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        th { background: var(--card-alt); font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: 11px; }
+        tr:last-child td { border-bottom: none; }
+
+        /* ── Log Feed ── */
+        .log-box {
+            background: #030712;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            height: 480px;
+            overflow-y: auto;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 11px;
+            padding: 8px;
+        }
+        .log-entry {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 8px;
+            border-bottom: 1px solid rgba(31,41,55,0.4);
+        }
+        .badge-status {
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 10px;
+        }
+        .badge-2xx { background: #064e3b; color: #34d399; }
+        .badge-3xx { background: #1e3a8a; color: #60a5fa; }
+        .badge-4xx { background: #78350f; color: #fbbf24; }
+        .badge-5xx { background: #7f1d1d; color: #f87171; }
+
+        /* ── Footer ── */
+        footer {
+            border-top: 1px solid var(--border);
+            background: var(--card);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--dim);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ══ Header ══ -->
+    <header>
+        <div class="header-brand">
+            <div class="header-logo">
+                <span>🌐 Domain Extension</span>
+                <span class="header-tag">v__VERSION__</span>
+            </div>
+            <div class="status-pill">
+                <span id="statusDot" class="status-dot"></span>
+                <span id="statusText">Checking...</span>
+            </div>
+            <span id="lanBadge" class="lan-badge">LAN: __LAN_IP__</span>
+        </div>
+        <div class="header-actions">
+            <a href="/__xai/ca" class="btn btn-sm" download="rootCA.pem">📥 Download Root CA</a>
+            <a href="/__xai/proxy.pac" class="btn btn-sm" target="_blank">📄 PAC Script</a>
+            <button class="btn btn-sm btn-primary" onclick="refreshAll()">🔄 Refresh</button>
+        </div>
+    </header>
+
+    <!-- ══ Nav Tabs ══ -->
+    <nav class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('overview')">📊 Overview & Mobile Connect</button>
+        <button class="tab-btn" onclick="switchTab('websites')">📁 Websites & Config</button>
+        <button class="tab-btn" onclick="switchTab('tethered')">📱 Tethered Overrides</button>
+        <button class="tab-btn" onclick="switchTab('github')">🐙 GitHub Repos</button>
+        <button class="tab-btn" onclick="switchTab('logs')">⚡ Live Traffic Stream</button>
+    </nav>
+
+    <!-- ══ Content ══ -->
+    <main>
+
+        <!-- ══════════ TAB 1: OVERVIEW & MOBILE CONNECT ══════════ -->
+        <section id="pane-overview" class="tab-pane active">
+            <!-- Telemetry Stats -->
+            <div class="grid-4" style="margin-bottom:16px;">
+                <div class="stat-card">
+                    <div class="stat-lbl">Total Requests</div>
+                    <div class="stat-val" id="metricTotal">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-lbl">Avg Latency</div>
+                    <div class="stat-val" style="color:var(--accent);" id="metricLatency">0<span style="font-size:12px;">ms</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-lbl">Uptime</div>
+                    <div class="stat-val" style="color:var(--warn);" id="metricUptime">0<span style="font-size:12px;">s</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-lbl">Local Websites</div>
+                    <div class="stat-val" style="color:#f472b6;" id="metricSites">0</div>
+                </div>
+            </div>
+
+            <!-- Mobile Connect QR Station -->
+            <div class="qr-card card">
+                <div class="card-header">
+                    <div class="card-title" style="color:var(--text);">📱 Mobile Onboarding Station (QR Code Pairing)</div>
+                    <span style="font-size:11px; color:var(--muted);">Point phone camera to pair instantly</span>
+                </div>
+                <div class="qr-layout">
+                    <div class="qr-preview" id="qrPreviewWrap">
+                        <img id="qrImg" src="/__xai/qr?text=http://__LAN_IP__:9080/__xai/ca" alt="QR Code" />
+                    </div>
+                    <div class="qr-details">
+                        <div class="qr-tabs">
+                            <button class="qr-tab-btn active" onclick="setQrMode('ca')">1. Trust Root CA</button>
+                            <button class="qr-tab-btn" onclick="setQrMode('portal')">2. Mode Portal</button>
+                            <button class="qr-tab-btn" onclick="setQrMode('view')">3. Plain HTTP View</button>
+                        </div>
+                        <div id="qrDescCa">
+                            <h4 style="color:var(--primary); margin-bottom:6px;">Step 1: Download & Trust Root CA Certificate</h4>
+                            <p style="color:var(--muted); font-size:12px; margin-bottom:12px;">
+                                Scan this QR code with your phone camera to download <strong>rootCA.pem</strong> directly.
+                            </p>
+                            <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:8px; padding:10px; font-size:11px; line-height:1.6;">
+                                <strong>Android:</strong> Settings → Security → Encryption & Credentials → Install a Certificate → CA Certificate.<br/>
+                                <strong>iOS:</strong> Settings → Profile Downloaded → Install. Then Settings → General → About → Certificate Trust Settings → Enable Full Trust.
+                            </div>
+                        </div>
+                        <div id="qrDescPortal" style="display:none;">
+                            <h4 style="color:var(--accent); margin-bottom:6px;">Step 2: Interactive Mobile Mode Portal</h4>
+                            <p style="color:var(--muted); font-size:12px; margin-bottom:8px;">
+                                Scan to open the client mode toggle for the selected domain:
+                            </p>
+                            <div class="form-row" style="margin-bottom:10px;">
+                                <select id="qrDomainSelect" onchange="updateQrDomain()" style="max-width:280px;">
+                                    <option value="www.google.com">www.google.com</option>
+                                </select>
+                            </div>
+                            <span id="qrPortalUrl" style="font-family:monospace; font-size:11px; color:#fbbf24;"></span>
+                        </div>
+                        <div id="qrDescView" style="display:none;">
+                            <h4 style="color:var(--warn); margin-bottom:6px;">Step 3: Plain HTTP Local Viewer (Bypasses HSTS)</h4>
+                            <p style="color:var(--muted); font-size:12px; margin-bottom:8px;">
+                                View your local website directory over HTTP port 9080 without encountering SSL/HSTS errors.
+                            </p>
+                            <span id="qrViewUrl" style="font-family:monospace; font-size:11px; color:#fbbf24;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Services Grid -->
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header"><div class="card-title">Active Services Matrix</div></div>
+                    <div class="service-row"><span>DNS Server (UDP 53)</span><span id="svcDns" class="indicator-dot"></span></div>
+                    <div class="service-row"><span>HTTPS Virtual Host (TCP 443)</span><span id="svcHttps" class="indicator-dot"></span></div>
+                    <div class="service-row"><span>CONNECT Proxy (TCP 9081)</span><span id="svcConnect" class="indicator-dot"></span></div>
+                    <div class="service-row"><span>Control Plane API (TCP 9080)</span><span id="svcControl" class="indicator-dot"></span></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><div class="card-title">Routing Mode Split</div></div>
+                    <div style="display:flex; gap:12px; margin-top:10px;">
+                        <div class="stat-card" style="flex:1;">
+                            <div class="stat-lbl">Local Serviced</div>
+                            <div class="stat-val" id="modeLocal">0</div>
+                        </div>
+                        <div class="stat-card" style="flex:1;">
+                            <div class="stat-lbl">Proxy Bypassed</div>
+                            <div class="stat-val" style="color:var(--warn);" id="modeProxy">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════ TAB 2: WEBSITES & CONFIGS ══════════ -->
+        <section id="pane-websites" class="tab-pane">
+            <div class="grid-2">
+                <!-- Left: Create & List -->
+                <div>
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">Scaffold New Website</div></div>
+                        <div class="form-row">
+                            <label>Domain Name</label>
+                            <input type="text" id="newDomain" placeholder="e.g. store.fake or www.target.com" />
+                        </div>
+                        <div class="form-row">
+                            <label>Starter Pack Template</label>
+                            <select id="newPack">
+                                <option value="vite-react">Vite + React</option>
+                                <option value="nextjs">NextJS</option>
+                                <option value="node-express">Express (Node)</option>
+                                <option value="php-xampp">PHP (XAMPP)</option>
+                                <option value="wordpress-xampp">WordPress (XAMPP)</option>
+                                <option value="laravel">Laravel</option>
+                                <option value="static">Plain Static HTML</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" style="width:100%;" onclick="createWebsite()">✨ Create Website</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Registered Websites</div>
+                            <span id="websitesCount" style="font-size:11px; color:var(--muted);">0 domains</span>
+                        </div>
+                        <div id="websitesList" style="max-height:360px; overflow-y:auto;">Loading websites...</div>
+                    </div>
+                </div>
+
+                <!-- Right: Config Editor -->
+                <div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title" id="editorTitle">Select a Website</div>
+                            <div id="editorActions" style="display:none; gap:6px;">
+                                <a id="viewSiteBtn" href="#" target="_blank" class="btn btn-sm">👁️ View</a>
+                                <button class="btn btn-sm btn-danger" onclick="deleteSelectedWebsite()">Delete</button>
+                            </div>
+                        </div>
+                        <div id="editorEmpty" style="color:var(--dim); text-align:center; padding:40px;">
+                            Click a website from the list on the left to edit its routing, latency, backend, and mock routes.
+                        </div>
+                        <div id="editorForm" style="display:none;">
+                            <div class="grid-2">
+                                <div class="form-row">
+                                    <label>Routing Mode</label>
+                                    <select id="cfgMode">
+                                        <option value="local">Local (Serve local files/backend)</option>
+                                        <option value="proxy">Proxy (Bypass to original live site)</option>
+                                    </select>
+                                </div>
+                                <div class="form-row">
+                                    <label>Entry File</label>
+                                    <input type="text" id="cfgEntry" value="index.html" />
+                                </div>
+                            </div>
+                            <div class="grid-2">
+                                <div class="form-row">
+                                    <label>Simulated Latency (ms)</label>
+                                    <input type="number" id="cfgLatency" min="0" value="0" />
+                                </div>
+                                <div class="form-row">
+                                    <label>Backend Origin URL</label>
+                                    <input type="text" id="cfgBackend" placeholder="http://127.0.0.1:3000" />
+                                </div>
+                            </div>
+                            <div class="grid-2">
+                                <div class="form-row">
+                                    <label>Backend Profile</label>
+                                    <input type="text" id="cfgBackendProfile" placeholder="e.g. nextjs" />
+                                </div>
+                                <div class="form-row">
+                                    <label>Health Path</label>
+                                    <input type="text" id="cfgHealthPath" placeholder="/" />
+                                </div>
+                            </div>
+
+                            <div style="border:1px solid var(--border); border-radius:8px; padding:12px; margin:14px 0;">
+                                <div class="card-title" style="margin-bottom:8px;">Developer Watermark</div>
+                                <div class="grid-2">
+                                    <div class="form-row">
+                                        <label style="display:flex; align-items:center; gap:6px;">
+                                            <input type="checkbox" id="cfgWmEnabled" style="margin:0;" /> Enabled
+                                        </label>
+                                    </div>
+                                    <div class="form-row">
+                                        <label>Banner Text</label>
+                                        <input type="text" id="cfgWmText" placeholder="DEV ENVIRONMENT" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                    <label>Mock Routes (JSON)</label>
+                                    <select id="routeTemplateSelect" style="padding:2px 6px; font-size:11px;" onchange="loadRouteTemplate()">
+                                        <option value="">-- Load Route Template --</option>
+                                        <option value="json_mock">JSON API Response</option>
+                                        <option value="redirect_mock">URL Redirect</option>
+                                        <option value="error_500">500 Server Error</option>
+                                        <option value="delay_mock">Simulate Latency</option>
+                                    </select>
+                                </div>
+                                <textarea id="cfgRoutes" rows="4" style="font-family:monospace; font-size:11px;" placeholder='[{"path":"/api/*","action":"mock","body":{"ok":true}}]'></textarea>
+                            </div>
+
+                            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px;">
+                                <button class="btn btn-primary" onclick="saveSelectedConfig()">💾 Save Config</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════ TAB 3: TETHERED DEVICES ══════════ -->
+        <section id="pane-tethered" class="tab-pane">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header"><div class="card-title">Add Client IP Override</div></div>
+                    <div class="form-row">
+                        <label>Device IP Address</label>
+                        <input type="text" id="tetherClientIp" placeholder="e.g. 192.168.254.107" />
+                    </div>
+                    <div class="form-row">
+                        <label>Intercepted Domain</label>
+                        <input type="text" id="tetherDomain" placeholder="e.g. www.google.com" />
+                    </div>
+                    <div class="form-row">
+                        <label>Target Routing Mode</label>
+                        <select id="tetherMode">
+                            <option value="proxy">Proxy (Bypass to Original Live Site)</option>
+                            <option value="local">Local (Serve Local Directory Mock)</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="addClientOverride()">➕ Add Override Rule</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><div class="card-title">Active Device Overrides</div></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Client IP</th>
+                                    <th>Domain</th>
+                                    <th>Mode</th>
+                                    <th style="width:80px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tetherTableBody">
+                                <tr><td colspan="4" style="text-align:center; color:var(--dim); padding:24px;">No active overrides.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════ TAB 4: GITHUB REPOS ══════════ -->
+        <section id="pane-github" class="tab-pane">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header"><div class="card-title">Map Domain to Git Repo</div></div>
+                    <div class="form-row">
+                        <label>Map Domain</label>
+                        <input type="text" id="ghDomain" placeholder="myapp.fake" />
+                    </div>
+                    <div class="form-row">
+                        <label>GitHub Repository HTTPS Clone URL</label>
+                        <input type="text" id="ghRepo" placeholder="https://github.com/owner/repo.git" />
+                    </div>
+                    <div class="form-row">
+                        <label>Branch</label>
+                        <input type="text" id="ghBranch" value="main" />
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <button class="btn btn-primary" onclick="ghAdd()">🔗 Add Repo Source</button>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:11px; cursor:pointer;">
+                            <input type="checkbox" id="ghKeepFiles" /> Keep Files on Remove
+                        </label>
+                    </div>
+                    <div class="card-title" style="margin:16px 0 8px 0;">Sync Actions</div>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <button class="btn btn-sm" onclick="ghList()">List Mapped</button>
+                        <button class="btn btn-sm" onclick="ghStatus()">Check Status</button>
+                        <button class="btn btn-sm" onclick="ghPull()">Pull Domain</button>
+                        <button class="btn btn-sm" onclick="ghPullAll()">Pull All</button>
+                        <button class="btn btn-sm btn-danger" onclick="ghRemove()">Remove Repo</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><div class="card-title">Git Console Output</div></div>
+                    <pre id="ghConsole" style="background:#030712; border:1px solid var(--border); border-radius:8px; padding:12px; font-family:monospace; font-size:11px; color:#a5b4fc; min-height:280px; overflow-y:auto; margin:0;">(Ready for commands)</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════ TAB 5: LIVE LOGS ══════════ -->
+        <section id="pane-logs" class="tab-pane">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Live Request Stream (SSE)</div>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input type="text" id="logSearch" placeholder="Filter domain or path..." oninput="filterLogs()" style="padding:4px 8px; font-size:11px; width:180px;" />
+                        <button class="btn btn-sm" onclick="clearLogs()">Clear</button>
+                        <button class="btn btn-sm" id="autoscrollBtn" onclick="toggleAutoscroll()">Autoscroll: ON</button>
+                    </div>
+                </div>
+                <div class="log-box" id="logContainer">
+                    <div style="color:var(--dim); text-align:center; padding:30px;">Connecting to live request feed...</div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ══ Footer ══ -->
+    <footer>
+        <span>Domain Extension v__VERSION__ — High Performance Async Proxy & Virtual Host</span>
+        <span>LAN IP: <strong style="color:var(--accent);">__LAN_IP__</strong></span>
+    </footer>
+
+    <script>
+        const LAN_IP = "__LAN_IP__";
+        let selectedDomain = "";
+        let logEntries = [];
+        let autoscroll = true;
+        let eventSource = null;
+
+        // ── Navigation ──
+        function switchTab(name) {
+            document.querySelectorAll(".tab-pane").forEach(el => el.classList.remove("active"));
+            document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+            
+            const targetPane = document.getElementById("pane-" + name);
+            if (targetPane) targetPane.classList.add("active");
+
+            event.currentTarget.classList.add("active");
+
+            if (name === "tethered") loadClientOverrides();
+            if (name === "websites") loadWebsites();
+        }
+
+        // ── Status & Telemetry ──
+        async function fetchStatus() {
+            try {
+                const res = await fetch("/__xai/status?domain=test.fake");
+                const dot = document.getElementById("statusDot");
+                const txt = document.getElementById("statusText");
+                const indicatorClass = res.ok ? "indicator-dot online" : "indicator-dot";
+
+                document.getElementById("svcDns").className = indicatorClass;
+                document.getElementById("svcHttps").className = indicatorClass;
+                document.getElementById("svcConnect").className = indicatorClass;
+                document.getElementById("svcControl").className = indicatorClass;
+
+                if (res.ok) {
+                    dot.className = "status-dot online";
+                    txt.textContent = "ONLINE";
+                } else {
+                    dot.className = "status-dot";
+                    txt.textContent = "OFFLINE";
+                }
+            } catch (e) {
+                document.getElementById("statusDot").className = "status-dot";
+                document.getElementById("statusText").textContent = "OFFLINE";
+            }
+        }
+
+        async function fetchMetrics() {
+            try {
+                const res = await fetch("/__xai/metrics?top=10");
+                if (!res.ok) return;
+                const d = await res.json();
+                document.getElementById("metricTotal").textContent = (d.requestsTotal || 0).toLocaleString();
+                document.getElementById("metricLatency").innerHTML = (d.avgLatencyMs || 0).toFixed(1) + '<span style="font-size:12px;">ms</span>';
+                
+                const up = Math.floor(d.uptimeSeconds || 0);
+                document.getElementById("metricUptime").innerHTML = (up < 60 ? up + "s" : Math.floor(up/60) + "m");
+                
+                const modes = d.byMode || {};
+                document.getElementById("modeLocal").textContent = (modes.local || 0).toLocaleString();
+                document.getElementById("modeProxy").textContent = (modes.proxy || 0).toLocaleString();
+            } catch (e) {}
+        }
+
+        // ── QR Code Station ──
+        function setQrMode(mode) {
+            document.querySelectorAll(".qr-tab-btn").forEach(b => b.classList.remove("active"));
+            event.currentTarget.classList.add("active");
+
+            document.getElementById("qrDescCa").style.display = (mode === 'ca') ? 'block' : 'none';
+            document.getElementById("qrDescPortal").style.display = (mode === 'portal') ? 'block' : 'none';
+            document.getElementById("qrDescView").style.display = (mode === 'view') ? 'block' : 'none';
+
+            updateQrImage(mode);
+        }
+
+        function updateQrDomain() {
+            const domain = document.getElementById("qrDomainSelect").value;
+            const portalUrl = `http://${LAN_IP}:9080/__xai/portal?domain=${encodeURIComponent(domain)}`;
+            const viewUrl = `http://${LAN_IP}:9080/__xai/view/${encodeURIComponent(domain)}`;
+
+            document.getElementById("qrPortalUrl").textContent = portalUrl;
+            document.getElementById("qrViewUrl").textContent = viewUrl;
+
+            const activeBtn = document.querySelector(".qr-tab-btn.active");
+            const mode = activeBtn ? (activeBtn.textContent.includes("Portal") ? "portal" : "view") : "portal";
+            updateQrImage(mode);
+        }
+
+        function updateQrImage(mode) {
+            const domain = document.getElementById("qrDomainSelect").value || "www.google.com";
+            let targetUrl = `http://${LAN_IP}:9080/__xai/ca`;
+
+            if (mode === 'portal') {
+                targetUrl = `http://${LAN_IP}:9080/__xai/portal?domain=${encodeURIComponent(domain)}`;
+                document.getElementById("qrPortalUrl").textContent = targetUrl;
+            } else if (mode === 'view') {
+                targetUrl = `http://${LAN_IP}:9080/__xai/view/${encodeURIComponent(domain)}`;
+                document.getElementById("qrViewUrl").textContent = targetUrl;
+            }
+
+            document.getElementById("qrImg").src = `/__xai/qr?text=${encodeURIComponent(targetUrl)}`;
+        }
+
+        // ── Websites Management ──
+        async function loadWebsites() {
+            try {
+                const res = await fetch("/__xai/health?max=100");
+                if (!res.ok) return;
+                const data = await res.json();
+                const listEl = document.getElementById("websitesList");
+                const qrSelect = document.getElementById("qrDomainSelect");
+                listEl.innerHTML = "";
+                qrSelect.innerHTML = "";
+
+                const items = data.items || [];
+                document.getElementById("metricSites").textContent = items.length;
+                document.getElementById("websitesCount").textContent = `${items.length} domains`;
+
+                items.forEach(item => {
+                    const d = item.domain;
+                    const mode = item.defaultMode || "local";
+
+                    // QR Option
+                    const opt = document.createElement("option");
+                    opt.value = d;
+                    opt.textContent = d;
+                    qrSelect.appendChild(opt);
+
+                    // List Item
+                    const div = document.createElement("div");
+                    div.className = "website-item" + (d === selectedDomain ? " selected" : "");
+                    div.innerHTML = `
+                        <div style="font-weight:600; font-family:monospace; color:${d === selectedDomain ? '#a5b4fc' : '#f9fafb'};">${d}</div>
+                        <span class="pill ${mode === 'local' ? 'pill-local' : 'pill-proxy'}">${mode}</span>
+                    `;
+                    div.onclick = () => selectWebsite(d);
+                    listEl.appendChild(div);
+                });
+
+                if (items.length > 0 && !selectedDomain) {
+                    selectWebsite(items[0].domain);
+                }
+            } catch (e) {}
+        }
+
+        async function selectWebsite(domain) {
+            selectedDomain = domain;
+            document.querySelectorAll(".website-item").forEach(el => {
+                el.classList.toggle("selected", el.textContent.includes(domain));
+            });
+
+            document.getElementById("editorTitle").textContent = "Editing: " + domain;
+            document.getElementById("editorEmpty").style.display = "none";
+            document.getElementById("editorForm").style.display = "block";
+            document.getElementById("editorActions").style.display = "flex";
+            document.getElementById("viewSiteBtn").href = `/__xai/view/${domain}`;
+
+            try {
+                const res = await fetch(`/__xai/site-config?domain=${encodeURIComponent(domain)}`);
+                if (!res.ok) return;
+                const cfg = await res.json();
+
+                document.getElementById("cfgMode").value = cfg.mode || "local";
+                document.getElementById("cfgEntry").value = cfg.entry || "index.html";
+                document.getElementById("cfgLatency").value = cfg.latencyMs || 0;
+                document.getElementById("cfgBackend").value = cfg.backendOrigin || "";
+                document.getElementById("cfgBackendProfile").value = cfg.backendProfile || "";
+                document.getElementById("cfgHealthPath").value = cfg.backendHealthPath || "";
+
+                const wm = cfg.watermark || {};
+                document.getElementById("cfgWmEnabled").checked = !!wm.enabled;
+                document.getElementById("cfgWmText").value = wm.text || "";
+
+                document.getElementById("cfgRoutes").value = cfg.routes && cfg.routes.length > 0 
+                    ? JSON.stringify(cfg.routes, null, 2) 
+                    : "";
+            } catch (e) {}
+        }
+
+        async function saveSelectedConfig() {
+            if (!selectedDomain) return;
+            let routes = [];
+            const routesStr = document.getElementById("cfgRoutes").value.trim();
+            if (routesStr) {
+                try {
+                    routes = JSON.parse(routesStr);
+                } catch(e) {
+                    alert("Invalid JSON in Mock Routes: " + e.message);
+                    return;
+                }
+            }
+
+            const body = {
+                domain: selectedDomain,
+                mode: document.getElementById("cfgMode").value,
+                entry: document.getElementById("cfgEntry").value,
+                latencyMs: parseInt(document.getElementById("cfgLatency").value) || 0,
+                backendOrigin: document.getElementById("cfgBackend").value,
+                backendProfile: document.getElementById("cfgBackendProfile").value,
+                backendHealthPath: document.getElementById("cfgHealthPath").value,
+                watermark: {
+                    enabled: document.getElementById("cfgWmEnabled").checked,
+                    text: document.getElementById("cfgWmText").value,
+                    color: "#f59e0b"
+                },
+                routes: routes
+            };
+
+            try {
+                const res = await fetch("/__xai/site-config", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body)
+                });
+                if (res.ok) {
+                    alert("Config saved successfully!");
+                    loadWebsites();
+                } else {
+                    const err = await res.json();
+                    alert("Error: " + (err.error || "Failed to save"));
+                }
+            } catch (e) {
+                alert("Request error: " + e.message);
+            }
+        }
+
+        async function createWebsite() {
+            const domain = document.getElementById("newDomain").value.trim().toLowerCase();
+            const pack = document.getElementById("newPack").value;
+            if (!domain) {
+                alert("Domain name is required.");
+                return;
+            }
+
+            try {
+                const res = await fetch("/__xai/site-config", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        domain: domain,
+                        mode: "local",
+                        entry: "index.html",
+                        backendProfile: pack
+                    })
+                });
+                if (res.ok) {
+                    document.getElementById("newDomain").value = "";
+                    loadWebsites();
+                    selectWebsite(domain);
+                } else {
+                    alert("Failed to scaffold website.");
+                }
+            } catch(e) {
+                alert(e.message);
+            }
+        }
+
+        function loadRouteTemplate() {
+            const val = document.getElementById("routeTemplateSelect").value;
+            const target = document.getElementById("cfgRoutes");
+            if (val === "json_mock") {
+                target.value = JSON.stringify([{"path": "/api/*", "action": "mock", "status": 200, "body": {"ok": true, "user": "dev"}}], null, 2);
+            } else if (val === "redirect_mock") {
+                target.value = JSON.stringify([{"path": "/old-path", "action": "redirect", "status": 302, "target": "/new-path"}], null, 2);
+            } else if (val === "error_500") {
+                target.value = JSON.stringify([{"path": "/api/checkout", "action": "mock", "status": 500, "body": {"error": "Simulated payment failure"}}], null, 2);
+            } else if (val === "delay_mock") {
+                target.value = JSON.stringify([{"path": "/api/heavy", "action": "mock", "latencyMs": 1500, "body": {"status": "delayed"}}], null, 2);
+            }
+        }
+
+        // ── Tethered Devices ──
+        async function loadClientOverrides() {
+            try {
+                const res = await fetch("/__xai/client-overrides");
+                if (!res.ok) return;
+                const data = await res.json();
+                const body = document.getElementById("tetherTableBody");
+                body.innerHTML = "";
+
+                const overrides = data.overrides || {};
+                let count = 0;
+                for (const ip in overrides) {
+                    const doms = overrides[ip] || {};
+                    for (const d in doms) {
+                        count++;
+                        const mode = doms[d];
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td style="font-family:monospace; color:#a5b4fc;">${ip}</td>
+                            <td style="font-family:monospace; color:#fbbf24;">${d}</td>
+                            <td><span class="pill ${mode === 'local' ? 'pill-local' : 'pill-proxy'}">${mode}</span></td>
+                            <td><button class="btn btn-sm btn-danger" onclick="removeClientOverride('${ip}', '${d}')">Remove</button></td>
+                        `;
+                        body.appendChild(tr);
+                    }
+                }
+                if (count === 0) {
+                    body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--dim); padding:24px;">No active overrides registered.</td></tr>';
+                }
+            } catch (e) {}
+        }
+
+        async function addClientOverride() {
+            const ip = document.getElementById("tetherClientIp").value.trim();
+            const domain = document.getElementById("tetherDomain").value.trim().toLowerCase();
+            const mode = document.getElementById("tetherMode").value;
+
+            if (!ip || !domain) {
+                alert("Device IP and Domain are required.");
+                return;
+            }
+
+            try {
+                const res = await fetch("/__xai/client-overrides", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ clientIp: ip, domain: domain, mode: mode })
+                });
+                if (res.ok) {
+                    document.getElementById("tetherClientIp").value = "";
+                    document.getElementById("tetherDomain").value = "";
+                    loadClientOverrides();
+                } else {
+                    const err = await res.json();
+                    alert("Error: " + err.error);
+                }
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        async function removeClientOverride(ip, domain) {
+            try {
+                const res = await fetch(`/__xai/client-overrides?clientIp=${encodeURIComponent(ip)}&domain=${encodeURIComponent(domain)}`, {
+                    method: "DELETE"
+                });
+                if (res.ok) loadClientOverrides();
+            } catch (e) {}
+        }
+
+        // ── GitHub Repos ──
+        async function ghCall(path, body) {
+            const opts = body ? {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            } : undefined;
+            const res = await fetch("/__xai" + path, opts);
+            const data = await res.json();
+            document.getElementById("ghConsole").textContent = data.output || data.error || JSON.stringify(data, null, 2);
+        }
+        function ghList() { ghCall("/github/list"); }
+        function ghStatus() { ghCall("/github/status"); }
+        function ghAdd() {
+            const domain = document.getElementById("ghDomain").value.trim().toLowerCase();
+            const repo = document.getElementById("ghRepo").value.trim();
+            const branch = document.getElementById("ghBranch").value.trim() || "main";
+            if (!domain || !repo) return alert("Domain and Repo URL are required.");
+            ghCall("/github/add", { domain, repoUrl: repo, branch });
+        }
+        function ghPull() {
+            const domain = document.getElementById("ghDomain").value.trim().toLowerCase();
+            if (!domain) return alert("Domain is required.");
+            ghCall("/github/pull", { domain });
+        }
+        function ghPullAll() { ghCall("/github/pull-all", {}); }
+        function ghRemove() {
+            const domain = document.getElementById("ghDomain").value.trim().toLowerCase();
+            const keep = document.getElementById("ghKeepFiles").checked;
+            if (!domain) return alert("Domain is required.");
+            ghCall("/github/remove", { domain, keepFiles: keep });
+        }
+
+        // ── Live Logs (SSE) ──
+        function startLogStream() {
+            if (eventSource) eventSource.close();
+            const box = document.getElementById("logContainer");
+            box.innerHTML = "";
+
+            eventSource = new EventSource("/__xai/stream-logs");
+            eventSource.onmessage = function(e) {
+                try {
+                    const entry = JSON.parse(e.data);
+                    logEntries.push(entry);
+                    renderLogEntry(entry);
+                    if (autoscroll) box.scrollTop = box.scrollHeight;
+                } catch (err) {}
+            };
+        }
+
+        function renderLogEntry(entry) {
+            const box = document.getElementById("logContainer");
+            const div = document.createElement("div");
+            div.className = "log-entry";
+            
+            const sc = entry.status || 200;
+            const badgeClass = sc < 300 ? "badge-2xx" : sc < 400 ? "badge-3xx" : sc < 500 ? "badge-4xx" : "badge-5xx";
+
+            div.innerHTML = `
+                <span style="color:var(--dim); font-size:10px;">${new Date().toLocaleTimeString()}</span>
+                <span class="badge-status ${badgeClass}">${sc}</span>
+                <span style="color:#d1d5db; font-weight:700;">${entry.method || 'GET'}</span>
+                <span style="color:#fbbf24;">${entry.domain || ''}</span>
+                <span style="color:#9ca3af; flex:1; overflow:hidden; text-overflow:ellipsis;">${entry.path || '/'}</span>
+                <span style="color:var(--dim); font-size:10px;">${(entry.latencyMs || 0).toFixed(0)}ms</span>
+            `;
+            box.appendChild(div);
+        }
+
+        function clearLogs() {
+            logEntries = [];
+            document.getElementById("logContainer").innerHTML = '<div style="color:var(--dim); text-align:center; padding:30px;">Logs cleared.</div>';
+        }
+
+        function toggleAutoscroll() {
+            autoscroll = !autoscroll;
+            document.getElementById("autoscrollBtn").textContent = "Autoscroll: " + (autoscroll ? "ON" : "OFF");
+        }
+
+        function refreshAll() {
+            fetchStatus();
+            fetchMetrics();
+            loadWebsites();
+            loadClientOverrides();
+        }
+
+        // Init
+        window.addEventListener("DOMContentLoaded", () => {
+            fetchStatus();
+            fetchMetrics();
+            loadWebsites();
+            startLogStream();
+            setInterval(fetchStatus, 5000);
+            setInterval(fetchMetrics, 3000);
+        });
+    </script>
+</body>
+</html>
